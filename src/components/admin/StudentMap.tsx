@@ -99,6 +99,7 @@ export default function StudentMap({
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
+  const initializingRef = useRef(false);
   const [filter, setFilter] = useState<MapFilter>("all");
   const [mapReady, setMapReady] = useState(false);
 
@@ -107,42 +108,75 @@ export default function StudentMap({
 
   // ── 1. Initialize Leaflet once the container is in the DOM ─────────────────
   useEffect(() => {
-    if (mapRef.current || !containerRef.current) return;
+    if (!containerRef.current) return;
+
+    // Check if container already has a Leaflet map initialized
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((containerRef.current as any)._leaflet_id) {
+      return; // Skip initialization if map already exists
+    }
+
+    if (mapRef.current || initializingRef.current) return;
+
+    initializingRef.current = true;
 
     // Leaflet must only run client-side — dynamic import avoids SSR errors
-    import("leaflet").then((L) => {
-      // Fix default icon paths broken by webpack
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl:
-          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
+    import("leaflet")
+      .then((L) => {
+        // Double-check after async import
+        if (!containerRef.current) {
+          initializingRef.current = false;
+          return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((containerRef.current as any)._leaflet_id) {
+          initializingRef.current = false;
+          return;
+        }
+        if (mapRef.current) {
+          initializingRef.current = false;
+          return;
+        }
 
-      const map = L.map(containerRef.current!, {
-        center: VSU_CENTER,
-        zoom: DEFAULT_ZOOM,
-        zoomControl: false, // we use custom buttons
-        attributionControl: false,
-        maxBounds: MAP_BOUNDS, // Restrict panning to the defined area
-        maxBoundsViscosity: 1.0, // Make bounds "solid" - prevents dragging outside
-        minZoom: 13, // Prevent zooming out too far
-        maxZoom: 18, // Allow zooming in for detail
-      });
+        // Fix default icon paths broken by webpack
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          iconUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          shadowUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        });
 
-      // Tile layer - will be updated by theme effect
-      mapRef.current = map;
-      setMapReady(true);
-    });
+        const map = L.map(containerRef.current!, {
+          center: VSU_CENTER,
+          zoom: DEFAULT_ZOOM,
+          zoomControl: false, // we use custom buttons
+          attributionControl: false,
+          maxBounds: MAP_BOUNDS, // Restrict panning to the defined area
+          maxBoundsViscosity: 1.0, // Make bounds "solid" - prevents dragging outside
+          minZoom: 13, // Prevent zooming out too far
+          maxZoom: 18, // Allow zooming in for detail
+        });
+
+        // Tile layer - will be updated by theme effect
+        mapRef.current = map;
+        setMapReady(true);
+        initializingRef.current = false;
+      })
+      .catch(() => {
+        initializingRef.current = false;
+      });
 
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        setMapReady(false);
       }
+      initializingRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -348,7 +382,11 @@ export default function StudentMap({
         `}</style>
 
         {/* The actual map div — must have explicit width & height */}
-        <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+        <div
+          key="leaflet-map-container"
+          ref={containerRef}
+          style={{ width: "100%", height: "100%" }}
+        />
 
         {/* Custom zoom controls */}
         <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-1">

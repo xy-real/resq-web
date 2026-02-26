@@ -9,7 +9,7 @@ import {
   Home,
   AlertTriangle,
   Map,
-  MessageSquare,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -28,7 +28,7 @@ import DisasterModeToggle from "@/components/admin/DisasterModeToggle";
 import StatsCard from "@/components/admin/StatsCard";
 import StatusFilter from "@/components/admin/StatusFilter";
 import StudentTable from "@/components/admin/StudentTable";
-import SMSGatewaySimulator from "@/components/admin/SMSGatewaySimulator";
+import StudentLog from "@/components/admin/StudentLog";
 
 // Dynamically import map to avoid SSR issues with Leaflet
 const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
@@ -49,12 +49,12 @@ const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
   ),
 });
 
-type TabKey = "overview" | "map" | "sms";
+type TabKey = "overview" | "map" | "log";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Student List", icon: Users },
   { key: "map", label: "Map View", icon: Map },
-  { key: "sms", label: "SMS Gateway", icon: MessageSquare },
+  { key: "log", label: "Status Log", icon: History },
 ];
 
 export default function AdminDashboardPage() {
@@ -275,7 +275,7 @@ export default function AdminDashboardPage() {
               />
             </div>
 
-            {activeTab === "sms" && <SMSGatewaySimulator />}
+            {activeTab === "log" && <StudentLog />}
           </div>
         </div>
       </div>
