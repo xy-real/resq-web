@@ -59,9 +59,9 @@ export const STATUS_CONFIG: Record<
   },
   UNKNOWN: {
     label: 'Unknown',
-    color: 'text-slate-400',
-    bg: 'bg-slate-500/10',
-    ring: 'ring-slate-500/30',
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10',
+    ring: 'ring-purple-500/30',
   },
 };
 
