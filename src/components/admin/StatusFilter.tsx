@@ -32,9 +32,9 @@ export default function StatusFilter({
   const getColor = (key: FilterType) => {
     if (key === "all")
       return {
-        color: "text-slate-300",
-        bg: "bg-slate-500/10",
-        ring: "ring-slate-500/30",
+        color: 'text-sky-400',
+        bg: 'bg-sky-500/10',
+        ring: 'ring-sky-500/30',
       };
     return STATUS_CONFIG[key];
   };
