@@ -18,7 +18,23 @@ interface Props {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const VSU_CENTER: [number, number] = [10.746104347993336, 124.7945340158154];
+// Map bounds - coordinates for the restricted area
+// Corner coordinates:
+//   Upper Left:  10.767016202073258, 124.7697366934059
+//   Upper Right: 10.769929735553948, 124.80638501109676
+//   Bottom Right: 10.71559064281034, 124.81136412996186
+//   Bottom Left: 10.712226996495167, 124.78599149944102
+const MAP_BOUNDS: [[number, number], [number, number]] = [
+  [10.712226996495167, 124.7697366934059], // Southwest (bottom-left)
+  [10.769929735553948, 124.81136412996186], // Northeast (top-right)
+];
+
+// Center of the bounded area
+const VSU_CENTER: [number, number] = [
+  (MAP_BOUNDS[0][0] + MAP_BOUNDS[1][0]) / 2,
+  (MAP_BOUNDS[0][1] + MAP_BOUNDS[1][1]) / 2,
+];
+
 const DEFAULT_ZOOM = 14;
 
 const STATUS_COLORS: Record<string, string> = {
@@ -111,6 +127,10 @@ export default function StudentMap({
         zoom: DEFAULT_ZOOM,
         zoomControl: false, // we use custom buttons
         attributionControl: false,
+        maxBounds: MAP_BOUNDS, // Restrict panning to the defined area
+        maxBoundsViscosity: 1.0, // Make bounds "solid" - prevents dragging outside
+        minZoom: 13, // Prevent zooming out too far
+        maxZoom: 18, // Allow zooming in for detail
       });
 
       // Tile layer - will be updated by theme effect
@@ -148,14 +168,22 @@ export default function StudentMap({
 
       L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
 
-      // VSU campus radius ring
-      L.circle(VSU_CENTER, {
-        radius: 600,
+      // Bounded area rectangle - shows the restricted zone
+      L.rectangle(MAP_BOUNDS, {
         color: "#38bdf8",
         fillColor: "#38bdf8",
-        fillOpacity: isDark ? 0.04 : 0.08,
+        fillOpacity: isDark ? 0.02 : 0.04,
+        weight: 2,
+        dashArray: "8 6",
+      }).addTo(map);
+
+      // VSU campus center point
+      L.circle(VSU_CENTER, {
+        radius: 200,
+        color: "#38bdf8",
+        fillColor: "#38bdf8",
+        fillOpacity: isDark ? 0.08 : 0.12,
         weight: 1.5,
-        dashArray: "6 4",
       }).addTo(map);
     });
   }, [mapReady, isDark]);

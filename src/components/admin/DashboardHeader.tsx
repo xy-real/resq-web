@@ -58,7 +58,10 @@ export default function DashboardHeader({
           className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-theme-bg-tertiary hover:bg-theme-interactive-hover disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-theme-text-secondary ring-1 ring-theme-border-primary transition"
         >
           <RefreshCw
-            className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+            className={cn(
+              "h-4 w-4 transition-transform",
+              isRefreshing && "animate-spin",
+            )}
           />
           Refresh
         </button>

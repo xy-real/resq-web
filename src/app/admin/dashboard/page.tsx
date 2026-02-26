@@ -60,11 +60,13 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
 export default function AdminDashboardPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isManuallyRefreshing, setIsManuallyRefreshing] = useState(false);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const {
     data: students = [],
     isLoading: studentsLoading,
+    isFetching: studentsRefreshing,
     refetch: refetchStudents,
   } = useStudents();
 
@@ -87,6 +89,21 @@ export default function AdminDashboardPage() {
   );
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleRefresh = async () => {
+    setIsManuallyRefreshing(true);
+    const startTime = Date.now();
+
+    await refetchStudents();
+
+    // Ensure spinner shows for at least 500ms
+    const elapsed = Date.now() - startTime;
+    if (elapsed < 500) {
+      await new Promise((resolve) => setTimeout(resolve, 500 - elapsed));
+    }
+
+    setIsManuallyRefreshing(false);
+  };
+
   const handleStatusOverride = (student: Student, newStatus: StudentStatus) => {
     overrideStatus.mutate({ student, newStatus });
   };
@@ -164,9 +181,9 @@ export default function AdminDashboardPage() {
 
       <div className="relative z-10 mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
         <DashboardHeader
-          isRefreshing={studentsLoading}
+          isRefreshing={isManuallyRefreshing || studentsRefreshing}
           isDisasterMode={isDisasterMode}
-          onRefresh={() => refetchStudents()}
+          onRefresh={handleRefresh}
         />
 
         <DisasterModeToggle
