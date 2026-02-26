@@ -78,21 +78,34 @@ export default function StudentTable({
     <div className="flex flex-col gap-4">
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-theme-text-tertiary" />
         <input
           type="text"
           placeholder="Search name or ID…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg bg-[#0f1623] pl-9 pr-4 py-2 text-sm text-slate-200 placeholder:text-slate-500 ring-1 ring-white/5 focus:outline-none focus:ring-sky-500/50 transition"
+          className="w-full rounded-lg pl-9 pr-4 py-2 text-sm text-theme-text-primary placeholder:text-theme-text-tertiary ring-1 focus:outline-none focus:ring-sky-500/50 transition"
+          style={{
+            backgroundColor: "rgb(var(--bg-secondary))",
+            borderColor: "rgb(var(--border-primary))",
+          }}
         />
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl ring-1 ring-white/5">
+      <div
+        className="overflow-x-auto rounded-xl ring-1"
+        style={{ borderColor: "rgb(var(--border-primary))" }}
+      >
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/5 bg-[#0b1018]">
+            <tr
+              className="border-b"
+              style={{
+                borderColor: "rgb(var(--border-primary))",
+                backgroundColor: "rgb(var(--bg-tertiary))",
+              }}
+            >
               {(
                 [
                   { key: "student_id", label: "Student ID" },
@@ -104,14 +117,14 @@ export default function StudentTable({
                 <th
                   key={key}
                   onClick={() => handleSort(key)}
-                  className="cursor-pointer px-4 py-3 text-left font-semibold text-slate-400 hover:text-slate-200 transition select-none"
+                  className="cursor-pointer px-4 py-3 text-left font-semibold text-theme-text-secondary hover:text-theme-text-primary transition select-none"
                 >
                   <span className="inline-flex items-center gap-1">
                     {label} <SortIcon col={key} />
                   </span>
                 </th>
               ))}
-              <th className="px-4 py-3 text-left font-semibold text-slate-400">
+              <th className="px-4 py-3 text-left font-semibold text-theme-text-secondary">
                 Source
               </th>
               <th className="px-4 py-3" />
@@ -120,17 +133,27 @@ export default function StudentTable({
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-white/[0.03]">
+                <tr
+                  key={i}
+                  className="border-b"
+                  style={{ borderColor: "rgb(var(--border-secondary))" }}
+                >
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 rounded-md bg-white/5 animate-pulse" />
+                      <div
+                        className="h-4 rounded-md animate-pulse"
+                        style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}
+                      />
                     </td>
                   ))}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-500">
+                <td
+                  colSpan={6}
+                  className="py-12 text-center text-theme-text-tertiary"
+                >
                   No students found.
                 </td>
               </tr>
@@ -140,23 +163,29 @@ export default function StudentTable({
                 return (
                   <tr
                     key={student.id}
-                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                    className="border-b transition-colors"
+                    style={{
+                      borderColor: "rgb(var(--border-secondary))",
+                    }}
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-slate-400">
+                    <td className="px-4 py-3 font-mono text-xs text-theme-text-tertiary">
                       {student.student_id}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-200">
+                    <td className="px-4 py-3 font-medium text-theme-text-primary">
                       {student.name}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={student.current_status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-400 tabular-nums whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-theme-text-tertiary tabular-nums whitespace-nowrap">
                       {formatTimestamp(student.last_update_timestamp)}
                     </td>
                     <td className="px-4 py-3">
                       {student.last_update_source && (
-                        <span className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate-400">
+                        <span
+                          className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-theme-text-secondary"
+                          style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}
+                        >
                           {student.last_update_source}
                         </span>
                       )}
@@ -170,16 +199,22 @@ export default function StudentTable({
                               id === student.id ? null : student.id,
                             )
                           }
-                          className="rounded-lg p-1.5 text-slate-500 hover:text-slate-200 hover:bg-white/5 transition"
+                          className="rounded-lg p-1.5 text-theme-text-tertiary hover:text-theme-text-primary transition"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
 
                         {menuOpenId === student.id && (
-                          <div className="absolute right-0 z-10 mt-1 w-52 rounded-xl bg-[#161e2e] ring-1 ring-white/10 shadow-2xl py-1">
+                          <div
+                            className="absolute right-0 z-10 mt-1 w-52 rounded-xl ring-1 shadow-2xl py-1"
+                            style={{
+                              backgroundColor: "rgb(var(--bg-secondary))",
+                              borderColor: "rgb(var(--border-primary))",
+                            }}
+                          >
                             <button
                               type="button"
-                              className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5"
+                              className="w-full px-4 py-2 text-left text-sm text-theme-text-primary"
                               onClick={() => {
                                 onViewDetails(student);
                                 setMenuOpenId(null);
@@ -187,8 +222,13 @@ export default function StudentTable({
                             >
                               View details
                             </button>
-                            <div className="my-1 border-t border-white/5" />
-                            <p className="px-4 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                            <div
+                              className="my-1 border-t"
+                              style={{
+                                borderColor: "rgb(var(--border-primary))",
+                              }}
+                            />
+                            <p className="px-4 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-theme-text-tertiary">
                               Override status
                             </p>
                             {STATUSES.map((s) => {
@@ -198,7 +238,7 @@ export default function StudentTable({
                                   key={s}
                                   type="button"
                                   className={cn(
-                                    "w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition",
+                                    "w-full px-4 py-2 text-left text-sm transition",
                                     c.color,
                                   )}
                                   onClick={() => {
@@ -223,7 +263,7 @@ export default function StudentTable({
       </div>
 
       {!isLoading && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-theme-text-tertiary">
           Showing {filtered.length} of {students.length} students
         </p>
       )}

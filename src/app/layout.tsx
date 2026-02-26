@@ -28,16 +28,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${syne.variable} ${jetbrainsMono.variable}`}>
-      <body className="bg-[#0b1018] text-slate-200 antialiased">
+    <html
+      lang="en"
+      className={`${syne.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="antialiased"
+        style={{
+          backgroundColor: "rgb(var(--bg-primary))",
+          color: "rgb(var(--text-primary))",
+        }}
+      >
         <Providers>
           {children}
           <Toaster
-            theme="dark"
+            theme="light"
             position="bottom-right"
             toastOptions={{
               classNames: {
-                toast: "bg-[#161e2e] border border-white/10 text-slate-200",
+                toast:
+                  "bg-theme-bg-secondary border border-theme-border-primary text-theme-text-primary",
               },
             }}
           />

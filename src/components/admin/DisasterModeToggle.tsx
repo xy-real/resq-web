@@ -18,16 +18,22 @@ export default function DisasterModeToggle({
     <div
       className={cn(
         "flex items-center gap-4 rounded-xl px-5 py-3.5 ring-1 transition-all duration-300",
-        isActive
-          ? "bg-red-500/10 ring-red-500/40"
-          : "bg-[#0f1623] ring-white/5",
+        isActive ? "bg-red-500/10 ring-red-500/40" : "ring-1",
       )}
+      style={
+        !isActive
+          ? {
+              backgroundColor: "rgb(var(--bg-secondary))",
+              borderColor: "rgb(var(--border-primary))",
+            }
+          : undefined
+      }
     >
       <div
-        className={cn(
-          "rounded-lg p-2",
-          isActive ? "bg-red-500/20" : "bg-slate-700/50",
-        )}
+        className={cn("rounded-lg p-2", isActive ? "bg-red-500/20" : "")}
+        style={
+          !isActive ? { backgroundColor: "rgb(var(--bg-tertiary))" } : undefined
+        }
       >
         <AlertTriangle
           className={cn(
@@ -42,12 +48,12 @@ export default function DisasterModeToggle({
         <p
           className={cn(
             "text-sm font-semibold transition-colors",
-            isActive ? "text-red-300" : "text-slate-200",
+            isActive ? "text-red-500" : "text-theme-text-primary",
           )}
         >
           Disaster Mode
         </p>
-        <p className="text-xs text-slate-500 truncate">
+        <p className="text-xs text-theme-text-tertiary truncate">
           {isActive ? "Active — typhoon response engaged" : "Normal operations"}
         </p>
       </div>
@@ -60,12 +66,18 @@ export default function DisasterModeToggle({
         onClick={() => onToggle(!isActive)}
         className={cn(
           "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent",
-          "transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1018]",
+          "transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           isActive
             ? "bg-red-500 focus-visible:ring-red-500"
-            : "bg-slate-600 focus-visible:ring-slate-400",
+            : "focus-visible:ring-slate-400",
           isLoading && "opacity-50 cursor-not-allowed",
         )}
+        style={
+          {
+            "--tw-ring-offset-color": "rgb(var(--bg-primary))",
+            backgroundColor: !isActive ? "rgb(var(--bg-tertiary))" : undefined,
+          } as React.CSSProperties
+        }
       >
         <span
           className={cn(
