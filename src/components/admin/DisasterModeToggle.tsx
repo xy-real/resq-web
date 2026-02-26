@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useState } from "react";
 
 interface DisasterModeToggleProps {
   isActive: boolean;
@@ -14,21 +15,41 @@ export default function DisasterModeToggle({
   isLoading,
   onToggle,
 }: DisasterModeToggleProps) {
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleToggle = () => {
+    // Show confirmation only when activating disaster mode
+    if (!isActive) {
+      setShowConfirmation(true);
+    } else {
+      onToggle(false);
+    }
+  };
+
+  const confirmActivation = () => {
+    setShowConfirmation(false);
+    onToggle(true);
+  };
+
+  const cancelActivation = () => {
+    setShowConfirmation(false);
+  };
   return (
-    <div
-      className={cn(
-        "flex items-center gap-4 rounded-xl px-5 py-3.5 ring-1 transition-all duration-300",
-        isActive ? "bg-red-500/10 ring-red-500/40" : "ring-1",
-      )}
-      style={
-        !isActive
-          ? {
-              backgroundColor: "rgb(var(--bg-secondary))",
-              borderColor: "rgb(var(--border-primary))",
-            }
-          : undefined
-      }
-    >
+    <>
+      <div
+        className={cn(
+          "flex items-center gap-4 rounded-xl px-5 py-3.5 ring-1 transition-all duration-300",
+          isActive ? "bg-red-500/10 ring-red-500/40" : "ring-1",
+        )}
+        style={
+          !isActive
+            ? {
+                backgroundColor: "rgb(var(--bg-secondary))",
+                borderColor: "rgb(var(--border-primary))",
+              }
+            : undefined
+        }
+      >
       <div
         className={cn("rounded-lg p-2", isActive ? "bg-red-500/20" : "")}
         style={
@@ -63,7 +84,7 @@ export default function DisasterModeToggle({
         role="switch"
         aria-checked={isActive}
         disabled={isLoading}
-        onClick={() => onToggle(!isActive)}
+        onClick={handleToggle}
         className={cn(
           "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent",
           "transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
@@ -92,5 +113,62 @@ export default function DisasterModeToggle({
         </span>
       </button>
     </div>
+
+    {/* Confirmation Modal */}
+    {showConfirmation && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={cancelActivation}
+        />
+        
+        {/* Modal */}
+        <div
+          className="relative z-10 w-full max-w-md rounded-xl ring-1 shadow-2xl p-6 mx-4"
+          style={{
+            backgroundColor: "rgb(var(--bg-secondary))",
+            borderColor: "rgb(var(--border-primary))",
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="rounded-lg bg-red-500/10 p-2.5 shrink-0">
+              <AlertTriangle className="h-6 w-6 text-red-400" strokeWidth={1.8} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-theme-text-primary font-inter">
+                Activate Disaster Mode?
+              </h3>
+              <p className="text-sm text-theme-text-secondary mt-2 leading-relaxed">
+                This will enable emergency response protocols and alert all administrators. 
+                Only activate during actual disaster situations.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-6">
+            <button
+              type="button"
+              onClick={cancelActivation}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all border font-inter hover:bg-theme-interactive-hover"
+              style={{
+                borderColor: "rgb(var(--border-primary))",
+                color: "rgb(var(--text-primary))",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmActivation}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all bg-red-500 hover:bg-red-600 text-white border border-red-500 font-inter"
+            >
+              Activate
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 }
