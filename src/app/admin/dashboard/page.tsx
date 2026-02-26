@@ -12,11 +12,13 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 
 import {
   useStudents,
   useDisasterMode,
   useStatusOverride,
+  useEvacuationCenters,
 } from "@/hooks/useDashboard";
 import { computeStats, filterStudents } from "@/lib/utils";
 import type { FilterType, Student, StudentStatus } from "@/types";
@@ -27,6 +29,19 @@ import StatsCard from "@/components/admin/StatsCard";
 import StatusFilter from "@/components/admin/StatusFilter";
 import StudentTable from "@/components/admin/StudentTable";
 import SMSGatewaySimulator from "@/components/admin/SMSGatewaySimulator";
+
+// Dynamically import map to avoid SSR issues with Leaflet
+const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[520px] rounded-xl bg-[#0b1018] ring-1 ring-white/5">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 rounded-full border-2 border-sky-500/30 border-t-sky-400 animate-spin" />
+        <p className="text-sm text-slate-400">Loading map…</p>
+      </div>
+    </div>
+  ),
+});
 
 type TabKey = "overview" | "map" | "sms";
 
@@ -46,6 +61,8 @@ export default function AdminDashboardPage() {
     isLoading: studentsLoading,
     refetch: refetchStudents,
   } = useStudents();
+
+  const { data: evacuationCenters = [] } = useEvacuationCenters();
 
   const {
     data: isDisasterMode = false,
@@ -132,27 +149,23 @@ export default function AdminDashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#0b1018]">
-      {/* Ambient glow when disaster mode is active */}
       {isDisasterMode && (
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_-20%,rgba(239,68,68,0.08),transparent)]" />
       )}
 
       <div className="relative z-10 mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
-        {/* ── Header ──────────────────────────────────────────────────── */}
         <DashboardHeader
           isRefreshing={studentsLoading}
           isDisasterMode={isDisasterMode}
           onRefresh={() => refetchStudents()}
         />
 
-        {/* ── Disaster Mode Toggle ─────────────────────────────────── */}
         <DisasterModeToggle
           isActive={isDisasterMode}
           isLoading={settingsLoading || isToggling}
           onToggle={toggleDisasterMode}
         />
 
-        {/* ── Stats Grid ───────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {statCards.map((card) => (
             <StatsCard
@@ -169,9 +182,7 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
-        {/* ── Tabs ─────────────────────────────────────────────────── */}
         <div className="space-y-6">
-          {/* Tab bar */}
           <nav className="flex gap-1 border-b border-white/5 pb-0">
             {TABS.map(({ key, label, icon: Icon }) => {
               const isActive = activeTab === key;
@@ -194,7 +205,6 @@ export default function AdminDashboardPage() {
             })}
           </nav>
 
-          {/* Tab panels */}
           <div className="rounded-xl bg-[#0f1623] ring-1 ring-white/5 p-5 sm:p-6">
             {activeTab === "overview" && (
               <div className="space-y-5">
@@ -214,23 +224,10 @@ export default function AdminDashboardPage() {
             )}
 
             {activeTab === "map" && (
-              <div className="flex flex-col items-center justify-center py-20 gap-4 text-slate-500">
-                <Map className="h-12 w-12 text-slate-700" strokeWidth={1} />
-                <p className="text-sm">
-                  Map view requires a StudentMap component with your preferred
-                  map library (e.g. Mapbox, Google Maps, Leaflet).
-                </p>
-                <p className="text-xs text-slate-600">
-                  Drop your{" "}
-                  <code className="font-mono text-slate-500">StudentMap</code>{" "}
-                  component here and pass{" "}
-                  <code className="font-mono text-slate-500">students</code> and{" "}
-                  <code className="font-mono text-slate-500">
-                    evacuationCenters
-                  </code>{" "}
-                  as props.
-                </p>
-              </div>
+              <StudentMap
+                students={students}
+                evacuationCenters={evacuationCenters}
+              />
             )}
 
             {activeTab === "sms" && <SMSGatewaySimulator />}
