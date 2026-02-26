@@ -119,9 +119,9 @@ export default function AdminDashboardPage() {
       label: "Total Students",
       value: stats.total,
       icon: Users,
-      colorClass: "text-sky-700 dark:text-sky-400",
-      bgClass: "bg-sky-100 dark:bg-sky-500/10",
-      ringClass: "ring-sky-500/20",
+      colorClass: "text-emerald-700 dark:text-emerald-400",  // #047857 / #34D399
+      bgClass: "bg-emerald-100 dark:bg-emerald-500/10",      // #D1FAE5 / #10B981 with 10% opacity
+      ringClass: "ring-emerald-500/20",                      // #10B981 with 20% opacity
     },
     {
       key: "SAFE" as FilterType,
@@ -164,9 +164,9 @@ export default function AdminDashboardPage() {
       label: "Unknown",
       value: stats.UNKNOWN,
       icon: HelpCircle,
-      colorClass: "text-amber-700 dark:text-amber-400",
-      bgClass: "bg-amber-100 dark:bg-amber-500/10",
-      ringClass: "ring-amber-500/20",
+      colorClass: "text-purple-700 dark:text-purple-400",  // #7E22CE / #C084FC
+      bgClass: "bg-purple-100 dark:bg-purple-500/10",      // #F3E8FF / #A855F7 with 10% opacity
+      ringClass: "ring-purple-500/20",                     // #A855F7 with 20% opacity
     },
   ];
 
