@@ -119,9 +119,9 @@ export default function AdminDashboardPage() {
       label: "Total Students",
       value: stats.total,
       icon: Users,
-      colorClass: "text-slate-900 dark:text-slate-300",
-      bgClass: "bg-slate-200 dark:bg-slate-500/10",
-      ringClass: "ring-slate-500/20",
+      colorClass: "text-sky-700 dark:text-sky-400",
+      bgClass: "bg-sky-100 dark:bg-sky-500/10",
+      ringClass: "ring-sky-500/20",
     },
     {
       key: "SAFE" as FilterType,
@@ -164,9 +164,9 @@ export default function AdminDashboardPage() {
       label: "Unknown",
       value: stats.UNKNOWN,
       icon: HelpCircle,
-      colorClass: "text-slate-800 dark:text-slate-400",
-      bgClass: "bg-slate-200 dark:bg-slate-500/10",
-      ringClass: "ring-slate-500/20",
+      colorClass: "text-amber-700 dark:text-amber-400",
+      bgClass: "bg-amber-100 dark:bg-amber-500/10",
+      ringClass: "ring-amber-500/20",
     },
   ];
 
