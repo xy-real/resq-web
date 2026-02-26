@@ -1,50 +1,39 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import {
-  User,
-  Mail,
-  Phone,
-  IdCard,
-  Loader2,
-  Check,
-  Eye,
-  EyeOff,
-  Lock,
-} from "lucide-react";
+import { User, Mail, Loader2, Check, Eye, EyeOff, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { signUp } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface FormData {
-  studentId: string;
   surname: string;
   firstName: string;
   middleInitial: string;
   nameExtension: string;
   email: string;
-  contactNumber: string;
   password: string;
   confirmPassword: string;
 }
 
 interface FormErrors {
-  studentId?: string;
   surname?: string;
   firstName?: string;
   email?: string;
-  contactNumber?: string;
   password?: string;
   confirmPassword?: string;
+  general?: string;
 }
 
 export default function SignUpForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
-    studentId: "",
     surname: "",
     firstName: "",
     middleInitial: "",
     nameExtension: "",
     email: "",
-    contactNumber: "",
     password: "",
     confirmPassword: "",
   });
@@ -57,14 +46,6 @@ export default function SignUpForm() {
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    // Student ID validation (VSU-YYYY-XXX format)
-    const studentIdRegex = /^VSU-\d{4}-\d{3}$/;
-    if (!formData.studentId) {
-      newErrors.studentId = "Student ID is required";
-    } else if (!studentIdRegex.test(formData.studentId)) {
-      newErrors.studentId = "Format: VSU-YYYY-XXX (e.g., VSU-2024-001)";
-    }
 
     // Name validation
     if (!formData.surname.trim()) {
@@ -80,14 +61,6 @@ export default function SignUpForm() {
       newErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email format";
-    }
-
-    // Contact number validation (Philippines format)
-    const phoneRegex = /^(09|\+639)\d{9}$/;
-    if (!formData.contactNumber) {
-      newErrors.contactNumber = "Contact number is required";
-    } else if (!phoneRegex.test(formData.contactNumber.replace(/[\s-]/g, ""))) {
-      newErrors.contactNumber = "Format: 09XXXXXXXXX or +639XXXXXXXXX";
     }
 
     // Password validation
@@ -116,32 +89,72 @@ export default function SignUpForm() {
     }
 
     setIsSubmitting(true);
+    setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Construct full name
+      const fullName = [
+        formData.surname,
+        formData.firstName,
+        formData.middleInitial,
+        formData.nameExtension,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
-      // TODO: Replace with actual API call
-      console.log("Form submitted:", formData);
+      // Sign up with Supabase
+      const { user, error, message } = await signUp({
+        email: formData.email,
+        password: formData.password,
+        name: fullName,
+        isAdmin: true,
+      });
 
+      if (error) {
+        // Handle specific error types
+        if (error.message.includes("already registered")) {
+          setErrors({ email: "This email is already registered" });
+          toast.error("Email already exists", {
+            description: "Please use a different email or sign in instead.",
+          });
+        } else {
+          setErrors({ general: error.message });
+          toast.error("Registration failed", {
+            description: error.message,
+          });
+        }
+        return;
+      }
+
+      // Success! (either with immediate login or email verification required)
       setIsSuccess(true);
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setFormData({
-          studentId: "",
-          surname: "",
-          firstName: "",
-          middleInitial: "",
-          nameExtension: "",
-          email: "",
-          contactNumber: "",
-          password: "",
-          confirmPassword: "",
+      
+      if (message) {
+        // Email verification required
+        toast.success("Registration successful!", {
+          description: message,
+          duration: 5000,
         });
-        setIsSuccess(false);
-      }, 3000);
+      } else {
+        // Immediate login (no email verification)
+        toast.success("Registration successful!", {
+          description: "You are now logged in.",
+        });
+      }
+
+      // Redirect to sign in page after 2 seconds
+      setTimeout(() => {
+        router.push("/signin?registered=true");
+      }, 2000);
     } catch (error) {
       console.error("Submission error:", error);
+      setErrors({
+        general: "An unexpected error occurred. Please try again.",
+      });
+      toast.error("Something went wrong", {
+        description: "Please try again later.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -164,224 +177,142 @@ export default function SignUpForm() {
       }}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Student ID */}
-        <div>
-          <label
-            htmlFor="studentId"
-            className="block text-base font-semibold text-theme-text-primary mb-2 font-inter"
-          >
-            Student ID
-            <span className="text-red-400 ml-1">*</span>
-          </label>
-          <div className="relative">
-            <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-theme-text-tertiary" />
-            <input
-              type="text"
-              id="studentId"
-              value={formData.studentId}
-              onChange={(e) =>
-                handleInputChange("studentId", e.target.value.toUpperCase())
-              }
-              placeholder="e.g. VSU-2024-001"
-              className={cn(
-                "w-full pl-11 pr-4 py-3 rounded-lg text-base transition-all border-2 font-mono",
-                errors.studentId
-                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                  : "focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20",
-              )}
-              style={{
-                backgroundColor: "rgb(var(--bg-primary))",
-                borderColor: errors.studentId
-                  ? undefined
-                  : "rgb(var(--border-primary))",
-                color: "rgb(var(--text-primary))",
-              }}
-            />
+        {errors.general && (
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+            <p className="text-sm text-red-400 font-medium">{errors.general}</p>
           </div>
-          {errors.studentId && (
-            <p className="mt-1.5 text-sm text-red-400 font-medium">
-              {errors.studentId}
-            </p>
-          )}
-        </div>
+        )}
 
-        {/* Name Section */}
-        <div className="space-y-4">
-          {/* Surname & First Name */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="surname"
-                className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
-              >
-                Surname
-                <span className="text-red-400 ml-1">*</span>
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-theme-text-tertiary" />
-                <input
-                  type="text"
-                  id="surname"
-                  value={formData.surname}
-                  onChange={(e) => handleInputChange("surname", e.target.value)}
-                  placeholder="e.g. Dela Cruz"
-                  className={cn(
-                    "w-full pl-11 pr-4 py-3 rounded-lg text-base transition-all border-2",
-                    errors.surname
-                      ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                      : "focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20",
-                  )}
-                  style={{
-                    backgroundColor: "rgb(var(--bg-primary))",
-                    borderColor: errors.surname
-                      ? undefined
-                      : "rgb(var(--border-primary))",
-                    color: "rgb(var(--text-primary))",
-                  }}
-                />
-              </div>
-              {errors.surname && (
-                <p className="mt-1.5 text-sm text-red-400 font-medium">
-                  {errors.surname}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="firstName"
-                className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
-              >
-                First Name
-                <span className="text-red-400 ml-1">*</span>
-              </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="surname"
+              className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
+            >
+              Surname
+              <span className="text-red-400 ml-1">*</span>
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-theme-text-tertiary" />
               <input
                 type="text"
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
-                placeholder="e.g. Juan"
+                id="surname"
+                value={formData.surname}
+                onChange={(e) => handleInputChange("surname", e.target.value)}
+                placeholder="e.g. Dela Cruz"
                 className={cn(
-                  "w-full px-4 py-3 rounded-lg text-base transition-all border-2",
-                  errors.firstName
+                  "w-full pl-11 pr-4 py-3 rounded-lg text-base transition-all border-2",
+                  errors.surname
                     ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                     : "focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20",
                 )}
                 style={{
                   backgroundColor: "rgb(var(--bg-primary))",
-                  borderColor: errors.firstName
+                  borderColor: errors.surname
                     ? undefined
                     : "rgb(var(--border-primary))",
                   color: "rgb(var(--text-primary))",
                 }}
               />
-              {errors.firstName && (
-                <p className="mt-1.5 text-sm text-red-400 font-medium">
-                  {errors.firstName}
-                </p>
-              )}
             </div>
+            {errors.surname && (
+              <p className="mt-1.5 text-sm text-red-400 font-medium">
+                {errors.surname}
+              </p>
+            )}
           </div>
 
-          {/* Middle Initial & Extension */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="middleInitial"
-                className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
-              >
-                M.I.
-              </label>
-              <input
-                type="text"
-                id="middleInitial"
-                value={formData.middleInitial}
-                onChange={(e) =>
-                  handleInputChange(
-                    "middleInitial",
-                    e.target.value.toUpperCase().slice(0, 1),
-                  )
-                }
-                placeholder="e.g. A"
-                maxLength={1}
-                className="w-full px-4 py-3 rounded-lg text-base transition-all border-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 font-semibold"
-                style={{
-                  backgroundColor: "rgb(var(--bg-primary))",
-                  borderColor: "rgb(var(--border-primary))",
-                  color: "rgb(var(--text-primary))",
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="nameExtension"
-                className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
-              >
-                Extension (Optional)
-              </label>
-              <input
-                type="text"
-                id="nameExtension"
-                value={formData.nameExtension}
-                onChange={(e) =>
-                  handleInputChange("nameExtension", e.target.value)
-                }
-                placeholder="e.g. Jr., Sr., II, III"
-                maxLength={10}
-                className="w-full px-4 py-3 rounded-lg text-base transition-all border-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 font-inter"
-                style={{
-                  backgroundColor: "rgb(var(--bg-primary))",
-                  borderColor: "rgb(var(--border-primary))",
-                  color: "rgb(var(--text-primary))",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Number */}
-        <div>
-          <label
-            htmlFor="contactNumber"
-            className="block text-base font-semibold text-theme-text-primary mb-2 font-inter"
-          >
-            Contact Number
-            <span className="text-red-400 ml-1">*</span>
-          </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-theme-text-tertiary" />
+          <div>
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
+            >
+              First Name
+              <span className="text-red-400 ml-1">*</span>
+            </label>
             <input
-              type="tel"
-              id="contactNumber"
-              value={formData.contactNumber}
-              onChange={(e) =>
-                handleInputChange("contactNumber", e.target.value)
-              }
-              placeholder="e.g. 09XX XXX XXXX"
+              type="text"
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              placeholder="e.g. Juan"
               className={cn(
-                "w-full pl-11 pr-4 py-3 rounded-lg text-base transition-all border-2 font-mono",
-                errors.contactNumber
+                "w-full px-4 py-3 rounded-lg text-base transition-all border-2",
+                errors.firstName
                   ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                   : "focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20",
               )}
               style={{
                 backgroundColor: "rgb(var(--bg-primary))",
-                borderColor: errors.contactNumber
+                borderColor: errors.firstName
                   ? undefined
                   : "rgb(var(--border-primary))",
                 color: "rgb(var(--text-primary))",
               }}
             />
+            {errors.firstName && (
+              <p className="mt-1.5 text-sm text-red-400 font-medium">
+                {errors.firstName}
+              </p>
+            )}
           </div>
-          {errors.contactNumber && (
-            <p className="mt-1.5 text-sm text-red-400 font-medium">
-              {errors.contactNumber}
-            </p>
-          )}
         </div>
 
-        {/* Email */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="middleInitial"
+              className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
+            >
+              M.I. (Optional)
+            </label>
+            <input
+              type="text"
+              id="middleInitial"
+              value={formData.middleInitial}
+              onChange={(e) =>
+                handleInputChange(
+                  "middleInitial",
+                  e.target.value.toUpperCase().slice(0, 1),
+                )
+              }
+              placeholder="e.g. A"
+              maxLength={1}
+              className="w-full px-4 py-3 rounded-lg text-base transition-all border-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 font-semibold"
+              style={{
+                backgroundColor: "rgb(var(--bg-primary))",
+                borderColor: "rgb(var(--border-primary))",
+                color: "rgb(var(--text-primary))",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="nameExtension"
+              className="block text-sm font-semibold text-theme-text-secondary mb-2 font-inter"
+            >
+              Extension (Optional)
+            </label>
+            <input
+              type="text"
+              id="nameExtension"
+              value={formData.nameExtension}
+              onChange={(e) =>
+                handleInputChange("nameExtension", e.target.value)
+              }
+              placeholder="e.g. Jr., Sr., II, III"
+              maxLength={10}
+              className="w-full px-4 py-3 rounded-lg text-base transition-all border-2 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+              style={{
+                backgroundColor: "rgb(var(--bg-primary))",
+                borderColor: "rgb(var(--border-primary))",
+                color: "rgb(var(--text-primary))",
+              }}
+            />
+          </div>
+        </div>
+
         <div>
           <label
             htmlFor="email"
@@ -397,7 +328,7 @@ export default function SignUpForm() {
               id="email"
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
-              placeholder="e.g. juan.delacruz@vsu.edu.ph"
+              placeholder="e.g. admin@vsu.edu.ph"
               className={cn(
                 "w-full pl-11 pr-4 py-3 rounded-lg text-base transition-all border-2",
                 errors.email
@@ -420,7 +351,6 @@ export default function SignUpForm() {
           )}
         </div>
 
-        {/* Password */}
         <div>
           <label
             htmlFor="password"
@@ -436,7 +366,7 @@ export default function SignUpForm() {
               id="password"
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
-              placeholder="e.g. ••••••••"
+              placeholder="••••••••"
               className={cn(
                 "w-full pl-11 pr-12 py-3 rounded-lg text-base transition-all border-2",
                 errors.password
@@ -470,7 +400,6 @@ export default function SignUpForm() {
           )}
         </div>
 
-        {/* Confirm Password */}
         <div>
           <label
             htmlFor="confirmPassword"
@@ -488,7 +417,7 @@ export default function SignUpForm() {
               onChange={(e) =>
                 handleInputChange("confirmPassword", e.target.value)
               }
-              placeholder="e.g. ••••••••"
+              placeholder="••••••••"
               className={cn(
                 "w-full pl-11 pr-12 py-3 rounded-lg text-base transition-all border-2",
                 errors.confirmPassword
@@ -522,12 +451,11 @@ export default function SignUpForm() {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting || isSuccess}
           className={cn(
-            "w-full py-3.5 rounded-lg font-bold text-lg transition-all font-inter",
+            "w-full py-3.5 rounded-lg font-bold text-lg transition-all",
             isSuccess
               ? "bg-emerald-500 text-white"
               : "bg-sky-500 hover:bg-sky-600 text-white disabled:opacity-50 disabled:cursor-not-allowed",
@@ -544,15 +472,13 @@ export default function SignUpForm() {
               Registration Successful!
             </span>
           ) : (
-            "Register"
+            "Register Admin Account"
           )}
         </button>
 
-        {/* Privacy Notice */}
         <p className="text-xs text-theme-text-tertiary text-center leading-relaxed">
-          By registering, you agree to receive emergency alerts and updates from
-          VSU Disaster Response System. Your information will be kept
-          confidential.
+          By registering, you agree to be an authorized administrator for VSU
+          Disaster Response System.
         </p>
       </form>
     </div>
