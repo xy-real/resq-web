@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import { Users, Building2, Layers } from "lucide-react";
+import { Users, Building2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Student, EvacuationCenter } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MapFilter = "all" | "students" | "centers";
+type MapFilter = "centers" | "SAFE" | "NEEDS_ASSISTANCE" | "CRITICAL" | "EVACUATED" | "UNKNOWN";
 
 interface Props {
   students: Student[];
@@ -100,7 +100,7 @@ export default function StudentMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const initializingRef = useRef(false);
-  const [filter, setFilter] = useState<MapFilter>("all");
+  const [filter, setFilter] = useState<MapFilter>("centers");
   const [mapReady, setMapReady] = useState(false);
 
   const locatedStudents = students.filter((s) => s.latitude && s.longitude);
@@ -178,7 +178,6 @@ export default function StudentMap({
       }
       initializingRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── 1b. Update tile layer when theme changes ─────────────────────────────
@@ -257,7 +256,12 @@ export default function StudentMap({
         const popupBorder = isDark ? "#334155" : "#e2e8f0";
         const popupSecondary = isDark ? "#94a3b8" : "#64748b";
 
-        locatedStudents.forEach((student) => {
+        // Filter students by selected status
+        const filteredStudents = locatedStudents.filter((student) => 
+          student.current_status === filter || (!student.current_status && filter === "UNKNOWN")
+        );
+
+        filteredStudents.forEach((student) => {
           const icon = makeStudentIcon(L, student.current_status ?? "UNKNOWN");
           const marker = L.marker([student.latitude!, student.longitude!], {
             icon,
@@ -280,7 +284,7 @@ export default function StudentMap({
       }
 
       // Evacuation center markers
-      if (filter !== "students") {
+      if (filter === "centers") {
         const popupBg = isDark ? "#1e293b" : "#ffffff";
         const popupText = isDark ? "#f1f5f9" : "#0f172a";
         const popupBorder = isDark ? "#334155" : "#e2e8f0";
@@ -320,12 +324,15 @@ export default function StudentMap({
     <div className="flex flex-col gap-3">
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {(
             [
-              { key: "all", label: "All", Icon: Layers },
-              { key: "students", label: "Students", Icon: Users },
               { key: "centers", label: "Centers", Icon: Building2 },
+              { key: "SAFE", label: "Safe", Icon: Users },
+              { key: "NEEDS_ASSISTANCE", label: "Needs Assistance", Icon: Users },
+              { key: "CRITICAL", label: "Critical", Icon: Users },
+              { key: "EVACUATED", label: "Evacuated", Icon: Users },
+              { key: "UNKNOWN", label: "Unknown", Icon: Users },
             ] as const
           ).map(({ key, label, Icon }) => (
             <button
@@ -441,7 +448,7 @@ export default function StudentMap({
         </div>
 
         {/* Empty state overlay */}
-        {mapReady && locatedStudents.length === 0 && filter !== "centers" && (
+        {mapReady && locatedStudents.filter((s) => s.current_status === filter || (!s.current_status && filter === "UNKNOWN")).length === 0 && filter !== "centers" && (
           <div className="absolute inset-0 flex items-center justify-center z-999 pointer-events-none">
             <div
               className="backdrop-blur-sm border rounded-xl px-6 py-4 text-center"

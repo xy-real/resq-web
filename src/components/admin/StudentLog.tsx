@@ -174,6 +174,7 @@ export default function StudentLog() {
     useState<ValidationFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilterPopup, setShowFilterPopup] = useState(false);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -244,92 +245,136 @@ export default function StudentLog() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mt-3 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-theme-text-tertiary" />
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Source:
-            </span>
-            {(["all", "APP", "SMS"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSourceFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  sourceFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  sourceFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : filter}
-              </button>
-            ))}
-          </div>
+        {/* Filter Button */}
+        <div className="mt-3 relative">
+          <button
+            type="button"
+            onClick={() => setShowFilterPopup(!showFilterPopup)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border font-inter hover:bg-theme-interactive-hover"
+            style={{
+              borderColor: "rgb(var(--border-primary))",
+              color: "rgb(var(--text-primary))",
+            }}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {(sourceFilter !== "all" || validationFilter !== "all" || statusFilter !== "all") && (
+              <span className="flex h-2 w-2 rounded-full bg-purple-500" />
+            )}
+          </button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Validation:
-            </span>
-            {(["all", "valid", "invalid"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setValidationFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  validationFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  validationFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
+          {/* Filter Popup */}
+          {showFilterPopup && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setShowFilterPopup(false)}
+              />
+              
+              {/* Popup */}
+              <div
+                className="absolute left-0 top-full mt-2 z-50 w-[500px] rounded-xl ring-1 shadow-2xl p-5 space-y-4"
+                style={{
+                  backgroundColor: "rgb(var(--bg-secondary))",
+                  borderColor: "rgb(var(--border-primary))",
+                }}
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
-          </div>
+                {/* Source Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Source:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "APP", "SMS"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setSourceFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          sourceFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          sourceFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter === "all" ? "All" : filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Status:
-            </span>
-            {(
-              [
-                "all",
-                "SAFE",
-                "NEEDS_ASSISTANCE",
-                "CRITICAL",
-                "EVACUATED",
-                "UNKNOWN",
-              ] as StatusFilterType[]
-            ).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setStatusFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  statusFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  statusFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : STATUS_CONFIG[filter].label}
-              </button>
-            ))}
-          </div>
+                {/* Validation Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Validation:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "valid", "invalid"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setValidationFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          validationFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          validationFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Status:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        "all",
+                        "SAFE",
+                        "NEEDS_ASSISTANCE",
+                        "CRITICAL",
+                        "EVACUATED",
+                        "UNKNOWN",
+                      ] as StatusFilterType[]
+                    ).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setStatusFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          statusFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          statusFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter === "all" ? "All" : STATUS_CONFIG[filter].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -115,13 +115,13 @@ export async function GET() {
       student_id: 'VSU-2024-009',
       name: 'Francisco Torres',
       current_status: 'UNKNOWN',
-      latitude: null,
-      longitude: null,
-      last_update_timestamp: null,
-      last_update_source: null,
+      latitude: 10.7405,
+      longitude: 124.7915,
+      last_update_timestamp: minutesAgo(400), // 6+ hours ago (marked as UNKNOWN)
+      last_update_source: 'APP',
       contact_number: '+63 913 456 7890',
       address: 'Barangay Zacarito, Baybay City',
-      updated_date: minutesAgo(180),
+      updated_date: minutesAgo(400),
     },
     {
       id: '10',
