@@ -53,7 +53,7 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
 
 export default function AdminDashboardPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [activeTab, setActiveTab] = useState("overview");
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const {
@@ -223,12 +223,13 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
-            {activeTab === "map" && (
+            <div className={activeTab === "map" ? "block" : "hidden"}>
               <StudentMap
                 students={students}
                 evacuationCenters={evacuationCenters}
+                isVisible={activeTab === "map"}
               />
-            )}
+            </div>
 
             {activeTab === "sms" && <SMSGatewaySimulator />}
           </div>

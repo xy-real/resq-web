@@ -1,282 +1,264 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Student, EvacuationCenter } from "@/types";
-import { STATUS_CONFIG } from "@/lib/utils";
-import { Users, Building2, ZoomIn, ZoomOut, Crosshair } from "lucide-react";
+import { Users, Building2, Layers } from "lucide-react";
 import { cn } from "@/lib/cn";
+import type { Student, EvacuationCenter } from "@/types";
 
-// VSU Baybay City coordinates
-const VSU_CENTER: [number, number] = [10.7423, 124.7942];
-const VSU_RADIUS_KM = 3;
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface StudentMapProps {
+type MapFilter = "all" | "students" | "centers";
+
+interface Props {
   students: Student[];
   evacuationCenters: EvacuationCenter[];
+  isVisible: boolean; // pass `true` when the Map View tab is active
 }
 
-type MapFilter = "all" | "students" | "evacuation";
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-// Status to Leaflet color mapping
+const VSU_CENTER: [number, number] = [10.7202, 124.7458];
+const DEFAULT_ZOOM = 14;
+
 const STATUS_COLORS: Record<string, string> = {
-  SAFE: "#34d399",
-  NEEDS_ASSISTANCE: "#fbbf24",
-  CRITICAL: "#f87171",
-  EVACUATED: "#38bdf8",
-  UNKNOWN: "#94a3b8",
+  SAFE: "#22c55e",
+  NEEDS_ASSISTANCE: "#f59e0b",
+  CRITICAL: "#ef4444",
+  EVACUATED: "#3b82f6",
+  UNKNOWN: "#6b7280",
 };
+
+const LEGEND_ITEMS = [
+  { label: "Safe", color: "#22c55e" },
+  { label: "Needs Assistance", color: "#f59e0b" },
+  { label: "Critical", color: "#ef4444" },
+  { label: "Evacuated", color: "#3b82f6" },
+  { label: "Unknown", color: "#6b7280" },
+  { label: "Evacuation Center", color: "#a855f7" },
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function makeStudentIcon(L: typeof import("leaflet"), status: string) {
+  const color = STATUS_COLORS[status] ?? STATUS_COLORS.UNKNOWN;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <circle cx="14" cy="14" r="10" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="2"/>
+      <circle cx="14" cy="14" r="5" fill="${color}"/>
+    </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
+  });
+}
+
+function makeCenterIcon(L: typeof import("leaflet")) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+      <circle cx="17" cy="17" r="13" fill="#a855f7" fill-opacity="0.2" stroke="#a855f7" stroke-width="2"/>
+      <text x="17" y="22" text-anchor="middle" font-size="13" font-weight="700"
+            font-family="system-ui,sans-serif" fill="#a855f7">E</text>
+    </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -18],
+  });
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StudentMap({
   students,
   evacuationCenters,
-}: StudentMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [stats, setStats] = useState({ total: 0, withLocation: 0 });
+  isVisible,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  const [filter, setFilter] = useState<MapFilter>("all");
+  const [mapReady, setMapReady] = useState(false);
 
+  const locatedStudents = students.filter((s) => s.latitude && s.longitude);
+
+  // ── 1. Initialize Leaflet once the container is in the DOM ─────────────────
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    if (mapRef.current || !containerRef.current) return;
 
-    // Dynamically import Leaflet (SSR safe)
+    // Leaflet must only run client-side — dynamic import avoids SSR errors
     import("leaflet").then((L) => {
-      // Fix default marker icons
+      // Fix default icon paths broken by webpack
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-        iconUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
         shadowUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+          "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(mapRef.current!, {
+      const map = L.map(containerRef.current!, {
         center: VSU_CENTER,
-        zoom: 14,
-        zoomControl: false,
-        attributionControl: true,
+        zoom: DEFAULT_ZOOM,
+        zoomControl: false, // we use custom buttons
+        attributionControl: false,
       });
 
-      // Dark tile layer matching dashboard aesthetic
+      // Dark CARTO tile layer
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 20,
-        },
+        { maxZoom: 19 },
       ).addTo(map);
 
-      // VSU campus radius circle
+      // VSU campus radius ring
       L.circle(VSU_CENTER, {
+        radius: 600,
         color: "#38bdf8",
         fillColor: "#38bdf8",
-        fillOpacity: 0.03,
+        fillOpacity: 0.04,
         weight: 1.5,
-        opacity: 0.4,
-        radius: VSU_RADIUS_KM * 1000,
         dashArray: "6 4",
       }).addTo(map);
 
-      // VSU center marker
-      const vsuIcon = L.divIcon({
-        html: `<div style="
-          background: #1e40af;
-          border: 2px solid #38bdf8;
-          border-radius: 50%;
-          width: 14px;
-          height: 14px;
-          box-shadow: 0 0 12px rgba(56,189,248,0.6);
-        "></div>`,
-        className: "",
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-      });
-
-      L.marker(VSU_CENTER, { icon: vsuIcon })
-        .addTo(map)
-        .bindPopup('<b style="color:#38bdf8">VSU Baybay Campus</b>');
-
-      mapInstanceRef.current = map;
-      setIsLoaded(true);
+      mapRef.current = map;
+      setMapReady(true);
     });
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update markers when students/centers change
+  // ── 2. invalidateSize whenever the tab becomes visible ────────────────────
+  //    This is THE critical fix — Leaflet needs to recalculate container size
   useEffect(() => {
-    if (!isLoaded || !mapInstanceRef.current) return;
+    if (!mapRef.current || !isVisible) return;
+
+    // Small delay lets the CSS transition/tab paint finish first
+    const timer = setTimeout(() => {
+      mapRef.current.invalidateSize({ animate: false });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isVisible]);
+
+  // ── 3. Re-render markers when students / centers / filter change ───────────
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
 
     import("leaflet").then((L) => {
-      const map = mapInstanceRef.current;
+      const map = mapRef.current;
 
-      // Clear existing markers
-      markersRef.current.forEach((m) => map.removeLayer(m));
-      markersRef.current = [];
-
-      const studentsWithLocation = students.filter(
-        (s) => s.latitude && s.longitude,
-      );
-      setStats({
-        total: students.length,
-        withLocation: studentsWithLocation.length,
+      // Remove existing markers (but keep tile layer + campus ring)
+      map.eachLayer((layer: import("leaflet").Layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+          map.removeLayer(layer);
+        }
       });
 
-      // Add student markers
-      if (activeFilter !== "evacuation") {
-        studentsWithLocation.forEach((student) => {
-          const status = student.current_status ?? "UNKNOWN";
-          const color = STATUS_COLORS[status] ?? STATUS_COLORS.UNKNOWN;
-
-          const icon = L.divIcon({
-            html: `<div style="
-              background: ${color};
-              border: 2px solid rgba(255,255,255,0.3);
-              border-radius: 50%;
-              width: 12px;
-              height: 12px;
-              box-shadow: 0 0 8px ${color}80;
-              cursor: pointer;
-            "></div>`,
-            className: "",
-            iconSize: [12, 12],
-            iconAnchor: [6, 6],
-          });
-
-          const cfg = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
+      // Student markers
+      if (filter !== "centers") {
+        locatedStudents.forEach((student) => {
+          const icon = makeStudentIcon(L, student.current_status ?? "UNKNOWN");
           const marker = L.marker([student.latitude!, student.longitude!], {
             icon,
-          }).addTo(map).bindPopup(`
-              <div style="font-family: system-ui; min-width: 160px;">
-                <p style="font-weight: 600; margin: 0 0 4px; color: #e2e8f0;">${student.name}</p>
-                <p style="font-size: 11px; color: #94a3b8; margin: 0 0 6px;">${student.student_id}</p>
-                <span style="
-                  display: inline-block;
-                  padding: 2px 8px;
-                  border-radius: 9999px;
-                  font-size: 11px;
-                  font-weight: 600;
-                  background: ${color}20;
-                  color: ${color};
-                  border: 1px solid ${color}40;
-                ">${cfg?.label ?? status}</span>
+          });
+          marker.bindPopup(
+            `
+            <div style="background:#1e293b;color:#f1f5f9;padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid #334155;font-family:system-ui,sans-serif">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">${student.name ?? "Unknown"}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">${student.student_id ?? ""}</div>
+              <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}22;color:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}">
+                ${(student.current_status ?? "UNKNOWN").replace("_", " ")}
               </div>
-            `);
-
-          markersRef.current.push(marker);
+              ${student.last_update_timestamp ? `<div style="font-size:10px;color:#64748b;margin-top:6px">${new Date(student.last_update_timestamp).toLocaleString()}</div>` : ""}
+            </div>
+          `,
+            { className: "leaflet-popup-dark" },
+          );
+          marker.addTo(map);
         });
       }
 
-      // Add evacuation center markers
-      if (activeFilter !== "students") {
+      // Evacuation center markers
+      if (filter !== "students") {
         evacuationCenters.forEach((center) => {
           if (!center.latitude || !center.longitude) return;
-
-          const pct =
-            center.capacity > 0
-              ? Math.round((center.current_occupancy / center.capacity) * 100)
-              : 0;
-          const capColor =
-            pct >= 90 ? "#f87171" : pct >= 70 ? "#fbbf24" : "#34d399";
-
-          const icon = L.divIcon({
-            html: `<div style="
-              background: #7c3aed;
-              border: 2px solid #a78bfa;
-              border-radius: 4px;
-              width: 14px;
-              height: 14px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 8px;
-              font-weight: bold;
-              color: white;
-              box-shadow: 0 0 8px rgba(124,58,237,0.6);
-            ">E</div>`,
-            className: "",
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
-          });
-
+          const icon = makeCenterIcon(L);
           const marker = L.marker([center.latitude, center.longitude], {
             icon,
-          }).addTo(map).bindPopup(`
-              <div style="font-family: system-ui; min-width: 180px;">
-                <p style="font-weight: 600; margin: 0 0 4px; color: #e2e8f0;">${center.name}</p>
-                <p style="font-size: 11px; color: #94a3b8; margin: 0 0 6px;">${center.address}</p>
-                <div style="display:flex; justify-content:space-between; font-size:11px;">
-                  <span style="color:#94a3b8">Capacity</span>
-                  <span style="color:${capColor}; font-weight:600">${center.current_occupancy}/${center.capacity} (${pct}%)</span>
-                </div>
+          });
+          marker.bindPopup(
+            `
+            <div style="background:#1e293b;color:#f1f5f9;padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid #334155;font-family:system-ui,sans-serif">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">${center.name ?? "Evacuation Center"}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">${center.address ?? ""}</div>
+              <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#a855f722;color:#a855f7">
+                Capacity: ${center.capacity ?? "N/A"}
               </div>
-            `);
-
-          markersRef.current.push(marker);
+            </div>
+          `,
+            { className: "leaflet-popup-dark" },
+          );
+          marker.addTo(map);
         });
       }
     });
-  }, [isLoaded, students, evacuationCenters, activeFilter]);
+  }, [mapReady, filter, locatedStudents, evacuationCenters]);
 
-  const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
-  const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
-  const handleCenter = () => mapInstanceRef.current?.setView(VSU_CENTER, 14);
+  // ── Custom zoom handlers ───────────────────────────────────────────────────
+  const zoomIn = () => mapRef.current?.zoomIn();
+  const zoomOut = () => mapRef.current?.zoomOut();
+  const resetView = () => mapRef.current?.setView(VSU_CENTER, DEFAULT_ZOOM);
 
-  const filterButtons: {
-    key: MapFilter;
-    label: string;
-    icon: React.ElementType;
-  }[] = [
-    { key: "all", label: "All", icon: Crosshair },
-    { key: "students", label: "Students", icon: Users },
-    { key: "evacuation", label: "Centers", icon: Building2 },
-  ];
-
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-4">
-      {/* Controls bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Filter buttons */}
+    <div className="flex flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between">
         <div className="flex gap-1.5">
-          {filterButtons.map(({ key, label, icon: Icon }) => (
+          {(
+            [
+              { key: "all", label: "All", Icon: Layers },
+              { key: "students", label: "Students", Icon: Users },
+              { key: "centers", label: "Centers", Icon: Building2 },
+            ] as const
+          ).map(({ key, label, Icon }) => (
             <button
               key={key}
-              type="button"
-              onClick={() => setActiveFilter(key)}
+              onClick={() => setFilter(key)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ring-1 transition-all",
-                activeFilter === key
-                  ? "bg-sky-500/10 text-sky-400 ring-sky-500/30"
-                  : "bg-transparent text-slate-500 ring-white/5 hover:text-slate-300 hover:bg-white/5",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                filter === key
+                  ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                  : "text-zinc-400 border border-white/5 hover:border-white/10 hover:text-zinc-300",
               )}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon size={13} />
               {label}
             </button>
           ))}
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
           <span>
-            <span className="text-slate-300 font-semibold">
-              {stats.withLocation}
+            <span className="text-zinc-300 font-medium">
+              {locatedStudents.length}
             </span>
-            /{stats.total} students located
+            /{students.length} students located
           </span>
           <span>
-            <span className="text-slate-300 font-semibold">
+            <span className="text-zinc-300 font-medium">
               {evacuationCenters.length}
             </span>{" "}
             centers
@@ -284,85 +266,74 @@ export default function StudentMap({
         </div>
       </div>
 
-      {/* Map container */}
+      {/* Map wrapper — explicit height is mandatory for Leaflet */}
       <div
-        className="relative rounded-xl overflow-hidden ring-1 ring-white/5"
+        className="relative rounded-xl overflow-hidden border border-white/5"
         style={{ height: "520px" }}
       >
+        {/* Leaflet CSS — injected inline to avoid a separate global import */}
+        <style>{`
+          @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+          .leaflet-container { background: #0f172a; }
+          .leaflet-popup-content-wrapper,
+          .leaflet-popup-tip { background: transparent !important; box-shadow: none !important; }
+          .leaflet-popup-content { margin: 0 !important; }
+        `}</style>
+
+        {/* The actual map div — must have explicit width & height */}
+        <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+
         {/* Custom zoom controls */}
         <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0f1623]/90 backdrop-blur ring-1 ring-white/10 text-slate-300 hover:text-white hover:bg-[#161e2e] transition"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleZoomOut}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0f1623]/90 backdrop-blur ring-1 ring-white/10 text-slate-300 hover:text-white hover:bg-[#161e2e] transition"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleCenter}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0f1623]/90 backdrop-blur ring-1 ring-white/10 text-slate-300 hover:text-sky-400 hover:bg-[#161e2e] transition"
-          >
-            <Crosshair className="h-4 w-4" />
-          </button>
+          {[
+            { label: "+", action: zoomIn },
+            { label: "−", action: zoomOut },
+            { label: "⊙", action: resetView },
+          ].map(({ label, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              className="w-8 h-8 rounded-lg bg-zinc-900/90 border border-white/10 text-zinc-300 hover:text-white hover:border-white/20 text-sm font-bold backdrop-blur-sm transition-all flex items-center justify-center"
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-3 left-3 z-[1000] rounded-xl bg-[#0b1018]/90 backdrop-blur ring-1 ring-white/10 p-3 space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">
+        <div className="absolute bottom-3 left-3 z-[1000] bg-zinc-900/90 backdrop-blur-sm border border-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
             Legend
           </p>
-          {Object.entries(STATUS_COLORS).map(([status, color]) => (
-            <div key={status} className="flex items-center gap-2">
-              <span
-                className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                style={{ background: color, boxShadow: `0 0 6px ${color}80` }}
+          {LEGEND_ITEMS.map(({ label, color }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 mb-1.5 last:mb-0"
+            >
+              <div
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: color }}
               />
-              <span className="text-[11px] text-slate-400">
-                {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label ??
-                  status}
-              </span>
+              <span className="text-xs text-zinc-400">{label}</span>
             </div>
           ))}
-          <div className="flex items-center gap-2 pt-1 border-t border-white/5">
-            <span
-              className="h-2.5 w-2.5 rounded-sm flex-shrink-0 bg-violet-500"
-              style={{ boxShadow: "0 0 6px rgba(124,58,237,0.6)" }}
-            />
-            <span className="text-[11px] text-slate-400">
-              Evacuation Center
-            </span>
-          </div>
         </div>
 
-        {/* Loading overlay */}
-        {!isLoaded && (
-          <div className="absolute inset-0 z-[999] flex items-center justify-center bg-[#0b1018]">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 rounded-full border-2 border-sky-500/30 border-t-sky-400 animate-spin" />
-              <p className="text-sm text-slate-400">Loading map…</p>
+        {/* Empty state overlay */}
+        {mapReady && locatedStudents.length === 0 && filter !== "centers" && (
+          <div className="absolute inset-0 flex items-center justify-center z-[999] pointer-events-none">
+            <div className="bg-zinc-900/80 backdrop-blur-sm border border-white/10 rounded-xl px-6 py-4 text-center">
+              <Users size={28} className="text-zinc-600 mx-auto mb-2" />
+              <p className="text-sm text-zinc-400">
+                No students with GPS coordinates yet
+              </p>
+              <p className="text-xs text-zinc-600 mt-1">
+                Evacuation centers are shown in purple
+              </p>
             </div>
           </div>
         )}
-
-        {/* Leaflet map */}
-        <div ref={mapRef} className="h-full w-full" />
       </div>
-
-      {/* No location warning */}
-      {stats.total > 0 && stats.withLocation === 0 && (
-        <p className="text-xs text-amber-400/70 text-center">
-          No students have location data yet. Location is populated when
-          students report via the app.
-        </p>
-      )}
     </div>
   );
 }
