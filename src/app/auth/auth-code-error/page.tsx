@@ -8,8 +8,8 @@ export default function AuthCallbackError() {
         </h1>
         <div className="space-y-3 text-left">
           <p className="text-gray-700 dark:text-gray-300">
-            There was a problem completing your authentication. This could be due
-            to:
+            There was a problem completing your authentication. This could be
+            due to:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 text-sm">
             <li>Google OAuth credentials not configured in Supabase</li>

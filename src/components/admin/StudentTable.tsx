@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MoreHorizontal, ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MoreHorizontal,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import type { Student, StudentStatus } from "@/types";
 import { STATUS_CONFIG, formatTimestamp } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
@@ -65,7 +72,7 @@ export default function StudentTable({
             ? String(av).localeCompare(String(bv))
             : String(bv).localeCompare(String(av));
         }),
-    [students, search, sortKey, sortDir]
+    [students, search, sortKey, sortDir],
   );
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -176,7 +183,10 @@ export default function StudentTable({
               </tr>
             ) : (
               paginatedData.map((student) => {
-                const cfg = STATUS_CONFIG[(student.last_status ?? "UNKNOWN") as StudentStatus];
+                const cfg =
+                  STATUS_CONFIG[
+                    (student.last_status ?? "UNKNOWN") as StudentStatus
+                  ];
                 return (
                   <tr
                     key={student.student_id}
@@ -285,7 +295,8 @@ export default function StudentTable({
       {!isLoading && filtered.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-theme-text-tertiary">
-            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of {filtered.length} students
+            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of{" "}
+            {filtered.length} students
           </p>
 
           {totalPages > 1 && (
@@ -303,46 +314,51 @@ export default function StudentTable({
               </button>
 
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first, last, current, and adjacent pages
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => handlePageChange(page)}
-                        className={cn(
-                          "min-w-[32px] h-8 px-2 rounded-lg text-sm font-semibold transition",
-                          page === currentPage
-                            ? "text-white"
-                            : "text-theme-text-secondary hover:text-theme-text-primary"
-                        )}
-                        style={{
-                          backgroundColor:
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show first, last, current, and adjacent pages
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => handlePageChange(page)}
+                          className={cn(
+                            "min-w-[32px] h-8 px-2 rounded-lg text-sm font-semibold transition",
                             page === currentPage
-                              ? "rgb(var(--color-sky-500))"
-                              : "rgb(var(--bg-secondary))",
-                        }}
-                      >
-                        {page}
-                      </button>
-                    );
-                  } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return (
-                      <span
-                        key={page}
-                        className="px-1 text-theme-text-tertiary text-sm"
-                      >
-                        …
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
+                              ? "text-white"
+                              : "text-theme-text-secondary hover:text-theme-text-primary",
+                          )}
+                          style={{
+                            backgroundColor:
+                              page === currentPage
+                                ? "rgb(var(--color-sky-500))"
+                                : "rgb(var(--bg-secondary))",
+                          }}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span
+                          key={page}
+                          className="px-1 text-theme-text-tertiary text-sm"
+                        >
+                          …
+                        </span>
+                      );
+                    }
+                    return null;
+                  },
+                )}
               </div>
 
               <button
@@ -362,9 +378,7 @@ export default function StudentTable({
       )}
 
       {!isLoading && filtered.length === 0 && (
-        <p className="text-xs text-theme-text-tertiary">
-          No students found
-        </p>
+        <p className="text-xs text-theme-text-tertiary">No students found</p>
       )}
     </div>
   );
