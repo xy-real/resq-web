@@ -1,166 +1,127 @@
-import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Generate realistic timestamps in the past hour
-const now = Date.now();
-const minutesAgo = (mins: number) => new Date(now - mins * 60 * 1000).toISOString();
+/**
+ * GET /api/students
+ * Fetch all students (admin only) or own student record
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
-export async function GET() {
-  return NextResponse.json([
-    {
-      id: '1',
-      student_id: 'VSU-2024-001',
-      name: 'Juan dela Cruz',
-      current_status: 'SAFE',
-      latitude: 10.7435,
-      longitude: 124.7938,
-      last_update_timestamp: minutesAgo(5),
-      last_update_source: 'APP',
-      contact_number: '+63 912 345 6789',
-      address: 'Barangay Candadam, Baybay City',
-      updated_date: minutesAgo(5),
-    },
-    {
-      id: '2',
-      student_id: 'VSU-2024-002',
-      name: 'Maria Santos',
-      current_status: 'NEEDS_ASSISTANCE',
-      latitude: 10.7398,
-      longitude: 124.7901,
-      last_update_timestamp: minutesAgo(12),
-      last_update_source: 'SMS',
-      contact_number: '+63 917 234 5678',
-      address: 'Barangay Villa Mag-aso, Baybay City',
-      updated_date: minutesAgo(12),
-    },
-    {
-      id: '3',
-      student_id: 'VSU-2024-003',
-      name: 'Pedro Reyes',
-      current_status: 'CRITICAL',
-      latitude: 10.7367,
-      longitude: 124.7955,
-      last_update_timestamp: minutesAgo(3),
-      last_update_source: 'APP',
-      contact_number: '+63 919 876 5432',
-      address: 'Upper Guadalupe, Baybay City',
-      updated_date: minutesAgo(3),
-    },
-    {
-      id: '4',
-      student_id: 'VSU-2024-004',
-      name: 'Ana Garcia',
-      current_status: 'EVACUATED',
-      latitude: 10.7450,
-      longitude: 124.7920,
-      last_update_timestamp: minutesAgo(45),
-      last_update_source: 'ADMIN',
-      contact_number: '+63 918 765 4321',
-      address: 'Barangay Poblacion Zone 1, Baybay City',
-      updated_date: minutesAgo(45),
-    },
-    {
-      id: '5',
-      student_id: 'VSU-2024-005',
-      name: 'Roberto Fernandez',
-      current_status: 'SAFE',
-      latitude: 10.7410,
-      longitude: 124.7885,
-      last_update_timestamp: minutesAgo(8),
-      last_update_source: 'SMS',
-      contact_number: '+63 920 123 4567',
-      address: 'Barangay Guadalupe, Baybay City',
-      updated_date: minutesAgo(8),
-    },
-    {
-      id: '6',
-      student_id: 'VSU-2024-006',
-      name: 'Carmen Lopez',
-      current_status: 'SAFE',
-      latitude: 10.7380,
-      longitude: 124.7970,
-      last_update_timestamp: minutesAgo(15),
-      last_update_source: 'APP',
-      contact_number: '+63 915 987 6543',
-      address: 'Barangay Ciabo, Baybay City',
-      updated_date: minutesAgo(15),
-    },
-    {
-      id: '7',
-      student_id: 'VSU-2024-007',
-      name: 'Diego Martinez',
-      current_status: 'NEEDS_ASSISTANCE',
-      latitude: 10.7425,
-      longitude: 124.7905,
-      last_update_timestamp: minutesAgo(20),
-      last_update_source: 'SMS',
-      contact_number: '+63 922 345 6789',
-      address: 'Barangay Punta, Baybay City',
-      updated_date: minutesAgo(20),
-    },
-    {
-      id: '8',
-      student_id: 'VSU-2024-008',
-      name: 'Elena Ramos',
-      current_status: 'SAFE',
-      latitude: 10.7360,
-      longitude: 124.7940,
-      last_update_timestamp: minutesAgo(7),
-      last_update_source: 'APP',
-      contact_number: '+63 916 234 5678',
-      address: 'Barangay Cogon, Baybay City',
-      updated_date: minutesAgo(7),
-    },
-    {
-      id: '9',
-      student_id: 'VSU-2024-009',
-      name: 'Francisco Torres',
-      current_status: 'UNKNOWN',
-      latitude: 10.7405,
-      longitude: 124.7915,
-      last_update_timestamp: minutesAgo(400), // 6+ hours ago (marked as UNKNOWN)
-      last_update_source: 'APP',
-      contact_number: '+63 913 456 7890',
-      address: 'Barangay Zacarito, Baybay City',
-      updated_date: minutesAgo(400),
-    },
-    {
-      id: '10',
-      student_id: 'VSU-2024-010',
-      name: 'Gloria Mendoza',
-      current_status: 'CRITICAL',
-      latitude: 10.7440,
-      longitude: 124.7890,
-      last_update_timestamp: minutesAgo(2),
-      last_update_source: 'APP',
-      contact_number: '+63 921 567 8901',
-      address: 'Barangay Bitanhuan, Baybay City',
-      updated_date: minutesAgo(2),
-    },
-    {
-      id: '11',
-      student_id: 'VSU-2024-011',
-      name: 'Hector Cruz',
-      current_status: 'SAFE',
-      latitude: 10.7395,
-      longitude: 124.7925,
-      last_update_timestamp: minutesAgo(10),
-      last_update_source: 'SMS',
-      contact_number: '+63 914 678 9012',
-      address: 'Barangay San Agustin, Baybay City',
-      updated_date: minutesAgo(10),
-    },
-    {
-      id: '12',
-      student_id: 'VSU-2024-012',
-      name: 'Isabel Navarro',
-      current_status: 'EVACUATED',
-      latitude: 10.7415,
-      longitude: 124.7950,
-      last_update_timestamp: minutesAgo(60),
-      last_update_source: 'ADMIN',
-      contact_number: '+63 923 789 0123',
-      address: 'Barangay Caridad, Baybay City',
-      updated_date: minutesAgo(60),
-    },
-  ]);
+    // Check if user is admin
+    const { data: adminData } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    let query = supabase
+      .from('students')
+      .select('*')
+      .order('last_update_timestamp', { ascending: false, nullsFirst: false });
+
+    // If not admin, only return own record
+    if (!adminData) {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data: students, error } = await query;
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(students);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/students
+ * Create a new student record (called during registration)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      student_id,
+      name,
+      email,
+      contact_number,
+      home_lat,
+      home_lng,
+      registered_home_risk_label,
+    } = body;
+
+    // Validate required fields
+    if (!student_id || !name || !email) {
+      return NextResponse.json(
+        { error: 'Missing required fields: student_id, name, email' },
+        { status: 400 }
+      );
+    }
+
+    // Insert student record
+    const { data: student, error } = await supabase
+      .from('students')
+      .insert({
+        student_id,
+        user_id: user.id,
+        email,
+        name,
+        contact_number,
+        home_lat,
+        home_lng,
+        registered_home_risk_label,
+        last_status: 'UNKNOWN',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(student, { status: 201 });
+  } catch (error) {
+    console.error('Error creating student:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

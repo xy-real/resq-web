@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * GET /api/settings/disaster_mode
+ * GET /api/settings/disaster-mode
  * Get current disaster mode status (accessible to all authenticated users)
  */
 export async function GET() {
@@ -43,7 +43,7 @@ export async function GET() {
 }
 
 /**
- * PUT /api/settings/disaster_mode
+ * PUT /api/settings/disaster-mode
  * Toggle disaster mode (admin only)
  */
 export async function PUT(request: NextRequest) {

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MoreHorizontal, ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MoreHorizontal,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import type { Student, StudentStatus } from "@/types";
 import { STATUS_CONFIG, formatTimestamp } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
@@ -15,11 +22,7 @@ interface StudentTableProps {
   onRefresh: () => void;
 }
 
-type SortKey =
-  | "name"
-  | "student_id"
-  | "current_status"
-  | "last_update_timestamp";
+type SortKey = "name" | "student_id" | "last_status" | "last_update_timestamp";
 type SortDir = "asc" | "desc";
 
 const STATUSES: StudentStatus[] = [
@@ -69,7 +72,7 @@ export default function StudentTable({
             ? String(av).localeCompare(String(bv))
             : String(bv).localeCompare(String(av));
         }),
-    [students, search, sortKey, sortDir]
+    [students, search, sortKey, sortDir],
   );
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -131,7 +134,7 @@ export default function StudentTable({
                 [
                   { key: "student_id", label: "Student ID" },
                   { key: "name", label: "Name" },
-                  { key: "current_status", label: "Status" },
+                  { key: "last_status", label: "Status" },
                   { key: "last_update_timestamp", label: "Last Update" },
                 ] as { key: SortKey; label: string }[]
               ).map(({ key, label }) => (
@@ -180,10 +183,13 @@ export default function StudentTable({
               </tr>
             ) : (
               paginatedData.map((student) => {
-                const cfg = STATUS_CONFIG[student.current_status ?? "UNKNOWN"];
+                const cfg =
+                  STATUS_CONFIG[
+                    (student.last_status ?? "UNKNOWN") as StudentStatus
+                  ];
                 return (
                   <tr
-                    key={student.id}
+                    key={student.student_id}
                     className="border-b transition-colors"
                     style={{
                       borderColor: "rgb(var(--border-secondary))",
@@ -196,10 +202,10 @@ export default function StudentTable({
                       {student.name}
                     </td>
                     <td className="px-4 py-3.5">
-                      <StatusBadge status={student.current_status} />
+                      <StatusBadge status={student.last_status} />
                     </td>
                     <td className="px-4 py-3.5 text-sm text-theme-text-tertiary tabular-nums whitespace-nowrap">
-                      {formatTimestamp(student.last_update_timestamp)}
+                      {formatTimestamp(student.last_update_timestamp ?? null)}
                     </td>
                     <td className="px-4 py-3">
                       {student.last_update_source && (
@@ -217,7 +223,9 @@ export default function StudentTable({
                           type="button"
                           onClick={() =>
                             setMenuOpenId((id) =>
-                              id === student.id ? null : student.id,
+                              id === student.student_id
+                                ? null
+                                : student.student_id,
                             )
                           }
                           className="rounded-lg p-1.5 text-theme-text-tertiary hover:text-theme-text-primary transition"
@@ -225,7 +233,7 @@ export default function StudentTable({
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
 
-                        {menuOpenId === student.id && (
+                        {menuOpenId === student.student_id && (
                           <div
                             className="absolute right-0 z-10 mt-1 w-52 rounded-xl ring-1 shadow-2xl py-1"
                             style={{
@@ -287,7 +295,8 @@ export default function StudentTable({
       {!isLoading && filtered.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-theme-text-tertiary">
-            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of {filtered.length} students
+            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of{" "}
+            {filtered.length} students
           </p>
 
           {totalPages > 1 && (
@@ -305,46 +314,51 @@ export default function StudentTable({
               </button>
 
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first, last, current, and adjacent pages
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => handlePageChange(page)}
-                        className={cn(
-                          "min-w-[32px] h-8 px-2 rounded-lg text-sm font-semibold transition",
-                          page === currentPage
-                            ? "text-white"
-                            : "text-theme-text-secondary hover:text-theme-text-primary"
-                        )}
-                        style={{
-                          backgroundColor:
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show first, last, current, and adjacent pages
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => handlePageChange(page)}
+                          className={cn(
+                            "min-w-[32px] h-8 px-2 rounded-lg text-sm font-semibold transition",
                             page === currentPage
-                              ? "rgb(var(--color-sky-500))"
-                              : "rgb(var(--bg-secondary))",
-                        }}
-                      >
-                        {page}
-                      </button>
-                    );
-                  } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return (
-                      <span
-                        key={page}
-                        className="px-1 text-theme-text-tertiary text-sm"
-                      >
-                        …
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
+                              ? "text-white"
+                              : "text-theme-text-secondary hover:text-theme-text-primary",
+                          )}
+                          style={{
+                            backgroundColor:
+                              page === currentPage
+                                ? "rgb(var(--color-sky-500))"
+                                : "rgb(var(--bg-secondary))",
+                          }}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span
+                          key={page}
+                          className="px-1 text-theme-text-tertiary text-sm"
+                        >
+                          …
+                        </span>
+                      );
+                    }
+                    return null;
+                  },
+                )}
               </div>
 
               <button
@@ -364,9 +378,7 @@ export default function StudentTable({
       )}
 
       {!isLoading && filtered.length === 0 && (
-        <p className="text-xs text-theme-text-tertiary">
-          No students found
-        </p>
+        <p className="text-xs text-theme-text-tertiary">No students found</p>
       )}
     </div>
   );

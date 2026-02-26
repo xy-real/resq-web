@@ -1,8 +1,11 @@
 "use client";
 
-import { RefreshCw, Shield } from "lucide-react";
+import { RefreshCw, Shield, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import ThemeToggle from "@/components/ThemeToggle";
+import { signOut } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -15,6 +18,28 @@ export default function DashboardHeader({
   isDisasterMode,
   onRefresh,
 }: DashboardHeaderProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await signOut();
+
+      if (error) {
+        toast.error("Logout failed", {
+          description: error.message,
+        });
+        return;
+      }
+
+      toast.success("Logged out successfully");
+      router.push("/signin");
+    } catch (err) {
+      toast.error("An error occurred", {
+        description: "Please try again",
+      });
+    }
+  };
+
   return (
     <header className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
       <div className="flex items-center gap-3">
@@ -64,6 +89,15 @@ export default function DashboardHeader({
             )}
           />
           Refresh
+        </button>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-red-500/10 hover:bg-red-500/20 px-4 py-2.5 text-base font-semibold text-red-400 ring-1 ring-red-500/30 transition font-inter"
+          title="Logout"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
         </button>
       </div>
     </header>
