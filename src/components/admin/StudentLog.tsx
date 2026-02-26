@@ -32,6 +32,24 @@ type StatusFilterType = "all" | StudentStatus;
 const MOCK_LOGS: StatusLog[] = [
   {
     id: "1",
+    student_id: "VSU-2024-010",
+    student_name: "Gloria Mendoza",
+    status: "CRITICAL",
+    timestamp: new Date(Date.now() - 1000 * 60 * 2),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "2",
+    student_id: "VSU-2024-003",
+    student_name: "Pedro Reyes",
+    status: "CRITICAL",
+    timestamp: new Date(Date.now() - 1000 * 60 * 3),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "3",
     student_id: "VSU-2024-001",
     student_name: "Juan dela Cruz",
     status: "SAFE",
@@ -40,30 +58,111 @@ const MOCK_LOGS: StatusLog[] = [
     validation_flag: true,
   },
   {
-    id: "2",
-    student_id: "VSU-2024-002",
-    student_name: "Maria Santos",
-    status: "NEEDS_ASSISTANCE",
-    timestamp: new Date(Date.now() - 1000 * 60 * 15),
-    source: "SMS",
-    validation_flag: true,
-  },
-  {
-    id: "3",
-    student_id: "VSU-2024-003",
-    student_name: "Pedro Reyes",
-    status: "CRITICAL",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
+    id: "4",
+    student_id: "VSU-2024-008",
+    student_name: "Elena Ramos",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 7),
     source: "APP",
     validation_flag: true,
   },
   {
-    id: "4",
+    id: "5",
+    student_id: "VSU-2024-005",
+    student_name: "Roberto Fernandez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 8),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "6",
+    student_id: "VSU-2024-011",
+    student_name: "Hector Cruz",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 10),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "7",
+    student_id: "VSU-2024-002",
+    student_name: "Maria Santos",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 12),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "8",
+    student_id: "VSU-2024-006",
+    student_name: "Carmen Lopez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 15),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "9",
+    student_id: "VSU-2024-007",
+    student_name: "Diego Martinez",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 20),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "10",
     student_id: "VSU-2024-004",
     student_name: "Ana Garcia",
     status: "EVACUATED",
     timestamp: new Date(Date.now() - 1000 * 60 * 45),
     source: "SMS",
+    validation_flag: false,
+  },
+  {
+    id: "11",
+    student_id: "VSU-2024-012",
+    student_name: "Isabel Navarro",
+    status: "EVACUATED",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "12",
+    student_id: "VSU-2024-001",
+    student_name: "Juan dela Cruz",
+    status: "UNKNOWN",
+    timestamp: new Date(Date.now() - 1000 * 60 * 65),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "13",
+    student_id: "VSU-2024-005",
+    student_name: "Roberto Fernandez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 70),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "14",
+    student_id: "VSU-2024-002",
+    student_name: "Maria Santos",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 80),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "15",
+    student_id: "VSU-2024-003",
+    student_name: "Pedro Reyes",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 85),
+    source: "APP",
     validation_flag: false,
   },
 ];
@@ -270,7 +369,7 @@ export default function StudentLog() {
                   }}
                 >
                   {/* Validation Icon */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {log.validation_flag ? (
                       <CheckCircle className="h-5 w-5 text-emerald-400" />
                     ) : (
@@ -305,7 +404,7 @@ export default function StudentLog() {
                   </div>
 
                   {/* Source Badge */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div
                       className="flex items-center gap-2 px-3.5 py-2 rounded-lg"
                       style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}

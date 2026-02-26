@@ -35,7 +35,7 @@ const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
   ssr: false,
   loading: () => (
     <div
-      className="flex items-center justify-center h-[520px] rounded-xl ring-1"
+      className="flex items-center justify-center h-130 rounded-xl ring-1"
       style={{
         backgroundColor: "rgb(var(--bg-secondary))",
         borderColor: "rgb(var(--border-primary))",
@@ -172,20 +172,27 @@ export default function AdminDashboardPage() {
 
   return (
     <main
-      className="min-h-screen"
+      className="h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "rgb(var(--bg-primary))" }}
     >
       {isDisasterMode && (
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_-20%,rgba(239,68,68,0.08),transparent)]" />
       )}
 
-      <div className="relative z-10 mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
+      {/* Fixed Header */}
+      <div 
+        className="relative z-10 shrink-0 mx-auto w-full max-w-screen-2xl px-4 pt-8 pb-6 sm:px-6 lg:px-10 border-b"
+        style={{ borderColor: "rgb(var(--border-primary))" }}
+      >
         <DashboardHeader
           isRefreshing={isManuallyRefreshing || studentsRefreshing}
           isDisasterMode={isDisasterMode}
           onRefresh={handleRefresh}
         />
+      </div>
 
+      {/* Scrollable Content */}
+      <div className="relative z-10 flex-1 overflow-y-auto mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
         <DisasterModeToggle
           isActive={isDisasterMode}
           isLoading={settingsLoading || isToggling}

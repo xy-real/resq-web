@@ -241,6 +241,7 @@ export default function StudentMap({
 
     import("leaflet").then((L) => {
       const map = mapRef.current;
+      if (!map) return; // Additional null check
 
       // Remove existing markers (but keep tile layer + campus ring)
       map.eachLayer((layer: import("leaflet").Layer) => {
@@ -389,7 +390,7 @@ export default function StudentMap({
         />
 
         {/* Custom zoom controls */}
-        <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-1">
+        <div className="absolute top-3 right-3 z-1000 flex flex-col gap-1">
           {[
             { label: "+", action: zoomIn },
             { label: "−", action: zoomOut },
@@ -414,7 +415,7 @@ export default function StudentMap({
 
         {/* Legend */}
         <div
-          className="absolute bottom-3 left-3 z-[1000] backdrop-blur-sm border rounded-xl p-3"
+          className="absolute bottom-3 left-3 z-1000 backdrop-blur-sm border rounded-xl p-3"
           style={{
             backgroundColor: isDark
               ? "rgba(24, 24, 27, 0.9)"
@@ -431,7 +432,7 @@ export default function StudentMap({
               className="flex items-center gap-2 mb-1.5 last:mb-0"
             >
               <div
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: color }}
               />
               <span className="text-xs text-theme-text-secondary">{label}</span>
@@ -441,7 +442,7 @@ export default function StudentMap({
 
         {/* Empty state overlay */}
         {mapReady && locatedStudents.length === 0 && filter !== "centers" && (
-          <div className="absolute inset-0 flex items-center justify-center z-[999] pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center z-999 pointer-events-none">
             <div
               className="backdrop-blur-sm border rounded-xl px-6 py-4 text-center"
               style={{
