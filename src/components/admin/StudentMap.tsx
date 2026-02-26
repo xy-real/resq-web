@@ -103,7 +103,9 @@ export default function StudentMap({
   const [filter, setFilter] = useState<MapFilter>("all");
   const [mapReady, setMapReady] = useState(false);
 
-  const locatedStudents = students.filter((s) => s.latitude && s.longitude);
+  const locatedStudents = students.filter(
+    (s) => s.last_known_lat && s.last_known_lng,
+  );
   const isDark = theme === "dark";
 
   // ── 1. Initialize Leaflet once the container is in the DOM ─────────────────
@@ -257,17 +259,20 @@ export default function StudentMap({
         const popupSecondary = isDark ? "#94a3b8" : "#64748b";
 
         locatedStudents.forEach((student) => {
-          const icon = makeStudentIcon(L, student.current_status ?? "UNKNOWN");
-          const marker = L.marker([student.latitude!, student.longitude!], {
-            icon,
-          });
+          const icon = makeStudentIcon(L, student.last_status ?? "UNKNOWN");
+          const marker = L.marker(
+            [student.last_known_lat!, student.last_known_lng!],
+            {
+              icon,
+            },
+          );
           marker.bindPopup(
             `
             <div style="background:${popupBg};color:${popupText};padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid ${popupBorder};font-family:system-ui,sans-serif">
               <div style="font-weight:700;font-size:14px;margin-bottom:4px">${student.name ?? "Unknown"}</div>
               <div style="font-size:11px;color:${popupSecondary};margin-bottom:6px">${student.student_id ?? ""}</div>
-              <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}22;color:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}">
-                ${(student.current_status ?? "UNKNOWN").replace("_", " ")}
+              <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${STATUS_COLORS[student.last_status ?? "UNKNOWN"]}22;color:${STATUS_COLORS[student.last_status ?? "UNKNOWN"]}">
+                ${(student.last_status ?? "UNKNOWN").replace("_", " ")}
               </div>
               ${student.last_update_timestamp ? `<div style="font-size:10px;color:${popupSecondary};margin-top:6px">${new Date(student.last_update_timestamp).toLocaleString()}</div>` : ""}
             </div>
@@ -294,10 +299,9 @@ export default function StudentMap({
           marker.bindPopup(
             `
             <div style="background:${popupBg};color:${popupText};padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid ${popupBorder};font-family:system-ui,sans-serif">
-              <div style="font-weight:700;font-size:14px;margin-bottom:4px">${center.name ?? "Evacuation Center"}</div>
-              <div style="font-size:11px;color:${popupSecondary};margin-bottom:6px">${center.address ?? ""}</div>
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px">${center.center_name ?? "Evacuation Center"}</div>
               <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#a855f722;color:#a855f7">
-                Capacity: ${center.capacity ?? "N/A"}
+                Evacuation Center
               </div>
             </div>
           `,

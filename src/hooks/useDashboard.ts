@@ -79,13 +79,13 @@ export function useStatusOverride() {
       student: Student;
       newStatus: StudentStatus;
     }) => {
-      await updateStudentStatus(student.id, newStatus);
+      await updateStudentStatus(student.student_id, newStatus);
       await createStatusLog({
         student_id: student.student_id,
         status: newStatus,
         source: 'ADMIN',
-        is_valid: true,
-        notes: 'Manual override by admin',
+        validation_flag: true,
+        timestamp: new Date().toISOString(),
       });
     },
     onSuccess: () => {

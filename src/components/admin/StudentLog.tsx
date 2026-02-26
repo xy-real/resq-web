@@ -32,7 +32,7 @@ type StatusFilterType = "all" | StudentStatus;
 const MOCK_LOGS: StatusLog[] = [
   {
     id: "1",
-    student_id: "VSU-2024-001",
+    student_id: "24-1-00123",
     student_name: "Juan dela Cruz",
     status: "SAFE",
     timestamp: new Date(Date.now() - 1000 * 60 * 5),
@@ -41,7 +41,7 @@ const MOCK_LOGS: StatusLog[] = [
   },
   {
     id: "2",
-    student_id: "VSU-2024-002",
+    student_id: "23-1-02589",
     student_name: "Maria Santos",
     status: "NEEDS_ASSISTANCE",
     timestamp: new Date(Date.now() - 1000 * 60 * 15),
@@ -50,7 +50,7 @@ const MOCK_LOGS: StatusLog[] = [
   },
   {
     id: "3",
-    student_id: "VSU-2024-003",
+    student_id: "24-1-00456",
     student_name: "Pedro Reyes",
     status: "CRITICAL",
     timestamp: new Date(Date.now() - 1000 * 60 * 30),
@@ -59,7 +59,7 @@ const MOCK_LOGS: StatusLog[] = [
   },
   {
     id: "4",
-    student_id: "VSU-2024-004",
+    student_id: "23-1-01789",
     student_name: "Ana Garcia",
     status: "EVACUATED",
     timestamp: new Date(Date.now() - 1000 * 60 * 45),

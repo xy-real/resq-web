@@ -1,8 +1,8 @@
-import type { Student, DashboardStats, StudentStatus } from '@/types';
+﻿import type { Student, DashboardStats, StudentStatus } from '@/types';
 
 export function computeStats(students: Student[]): DashboardStats {
   const count = (status: StudentStatus) =>
-    students.filter((s) => s.current_status === status).length;
+    students.filter((s) => s.last_status === status).length;
 
   return {
     total: students.length,
@@ -11,7 +11,7 @@ export function computeStats(students: Student[]): DashboardStats {
     CRITICAL: count('CRITICAL'),
     EVACUATED: count('EVACUATED'),
     UNKNOWN: students.filter(
-      (s) => !s.current_status || s.current_status === 'UNKNOWN',
+      (s) => !s.last_status || s.last_status === 'UNKNOWN',
     ).length,
   };
 }
@@ -23,10 +23,10 @@ export function filterStudents(
   if (filter === 'all') return students;
   if (filter === 'UNKNOWN') {
     return students.filter(
-      (s) => !s.current_status || s.current_status === 'UNKNOWN',
+      (s) => !s.last_status || s.last_status === 'UNKNOWN',
     );
   }
-  return students.filter((s) => s.current_status === filter);
+  return students.filter((s) => s.last_status === filter);
 }
 
 export const STATUS_CONFIG: Record<
@@ -65,8 +65,8 @@ export const STATUS_CONFIG: Record<
   },
 };
 
-export function formatTimestamp(ts: string | null): string {
-  if (!ts) return '—';
+export function formatTimestamp(ts: string | null | undefined): string {
+  if (!ts) return '';
   return new Intl.DateTimeFormat('en-PH', {
     dateStyle: 'medium',
     timeStyle: 'short',

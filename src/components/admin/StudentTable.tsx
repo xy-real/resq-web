@@ -15,11 +15,7 @@ interface StudentTableProps {
   onRefresh: () => void;
 }
 
-type SortKey =
-  | "name"
-  | "student_id"
-  | "current_status"
-  | "last_update_timestamp";
+type SortKey = "name" | "student_id" | "last_status" | "last_update_timestamp";
 type SortDir = "asc" | "desc";
 
 const STATUSES: StudentStatus[] = [
@@ -110,7 +106,7 @@ export default function StudentTable({
                 [
                   { key: "student_id", label: "Student ID" },
                   { key: "name", label: "Name" },
-                  { key: "current_status", label: "Status" },
+                  { key: "last_status", label: "Status" },
                   { key: "last_update_timestamp", label: "Last Update" },
                 ] as { key: SortKey; label: string }[]
               ).map(({ key, label }) => (
@@ -159,10 +155,10 @@ export default function StudentTable({
               </tr>
             ) : (
               filtered.map((student) => {
-                const cfg = STATUS_CONFIG[student.current_status ?? "UNKNOWN"];
+                const cfg = STATUS_CONFIG[student.last_status ?? "UNKNOWN"];
                 return (
                   <tr
-                    key={student.id}
+                    key={student.student_id}
                     className="border-b transition-colors"
                     style={{
                       borderColor: "rgb(var(--border-secondary))",
@@ -175,10 +171,10 @@ export default function StudentTable({
                       {student.name}
                     </td>
                     <td className="px-4 py-3.5">
-                      <StatusBadge status={student.current_status} />
+                      <StatusBadge status={student.last_status} />
                     </td>
                     <td className="px-4 py-3.5 text-sm text-theme-text-tertiary tabular-nums whitespace-nowrap">
-                      {formatTimestamp(student.last_update_timestamp)}
+                      {formatTimestamp(student.last_update_timestamp ?? null)}
                     </td>
                     <td className="px-4 py-3">
                       {student.last_update_source && (
@@ -196,7 +192,9 @@ export default function StudentTable({
                           type="button"
                           onClick={() =>
                             setMenuOpenId((id) =>
-                              id === student.id ? null : student.id,
+                              id === student.student_id
+                                ? null
+                                : student.student_id,
                             )
                           }
                           className="rounded-lg p-1.5 text-theme-text-tertiary hover:text-theme-text-primary transition"
@@ -204,7 +202,7 @@ export default function StudentTable({
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
 
-                        {menuOpenId === student.id && (
+                        {menuOpenId === student.student_id && (
                           <div
                             className="absolute right-0 z-10 mt-1 w-52 rounded-xl ring-1 shadow-2xl py-1"
                             style={{
