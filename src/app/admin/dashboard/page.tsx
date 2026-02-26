@@ -28,6 +28,7 @@ import StatsCard from "@/components/admin/StatsCard";
 import StatusFilter from "@/components/admin/StatusFilter";
 import StudentTable from "@/components/admin/StudentTable";
 import StudentLog from "@/components/admin/StudentLog";
+import AddEvacuationCenterModal from "@/components/admin/AddEvacuationCenterModal";
 
 // Dynamically import map to avoid SSR issues with Leaflet
 const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
@@ -60,6 +61,8 @@ export default function AdminDashboardPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [activeTab, setActiveTab] = useState("overview");
   const [isManuallyRefreshing, setIsManuallyRefreshing] = useState(false);
+  const [isAddEvacuationCenterModalOpen, setIsAddEvacuationCenterModalOpen] =
+    useState(false);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const {
@@ -69,7 +72,8 @@ export default function AdminDashboardPage() {
     refetch: refetchStudents,
   } = useStudents();
 
-  const { data: evacuationCenters = [] } = useEvacuationCenters();
+  const { data: evacuationCenters = [], refetch: refetchEvacuationCenters } =
+    useEvacuationCenters();
 
   const {
     data: isDisasterMode = false,
@@ -103,6 +107,14 @@ export default function AdminDashboardPage() {
 
   const handleViewDetails = (student: Student) => {
     toast.info(`Details for ${student.name}`);
+  };
+
+  const handleAddEvacuationCenter = () => {
+    setIsAddEvacuationCenterModalOpen(true);
+  };
+
+  const handleEvacuationCenterSuccess = () => {
+    refetchEvacuationCenters();
   };
 
   // ── Stats card config ─────────────────────────────────────────────────────
@@ -181,6 +193,7 @@ export default function AdminDashboardPage() {
           isRefreshing={isManuallyRefreshing || studentsRefreshing}
           isDisasterMode={isDisasterMode}
           onRefresh={handleRefresh}
+          onAddEvacuationCenter={handleAddEvacuationCenter}
         />
       </div>
 
@@ -276,6 +289,13 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Evacuation Center Modal */}
+      <AddEvacuationCenterModal
+        isOpen={isAddEvacuationCenterModalOpen}
+        onClose={() => setIsAddEvacuationCenterModalOpen(false)}
+        onSuccess={handleEvacuationCenterSuccess}
+      />
     </main>
   );
 }

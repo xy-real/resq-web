@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Shield, LogOut } from "lucide-react";
+import { RefreshCw, Shield, LogOut, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -11,12 +11,14 @@ interface DashboardHeaderProps {
   isRefreshing: boolean;
   isDisasterMode: boolean;
   onRefresh: () => void;
+  onAddEvacuationCenter: () => void;
 }
 
 export default function DashboardHeader({
   isRefreshing,
   isDisasterMode,
   onRefresh,
+  onAddEvacuationCenter,
 }: DashboardHeaderProps) {
   const router = useRouter();
 
@@ -76,6 +78,15 @@ export default function DashboardHeader({
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
+        <button
+          type="button"
+          onClick={onAddEvacuationCenter}
+          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-purple-500/10 hover:bg-purple-500/20 px-4 py-2.5 text-base font-semibold text-purple-400 ring-1 ring-purple-500/30 transition font-inter"
+          title="Add Evacuation Center"
+        >
+          <MapPin className="h-4 w-4" />
+          Add Evacuation Center
+        </button>
         <button
           type="button"
           onClick={onRefresh}
