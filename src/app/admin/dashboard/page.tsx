@@ -17,11 +17,10 @@ import dynamic from "next/dynamic";
 import {
   useStudents,
   useDisasterMode,
-  useStatusOverride,
   useEvacuationCenters,
 } from "@/hooks/useDashboard";
 import { computeStats, filterStudents } from "@/lib/utils";
-import type { FilterType, Student, StudentStatus } from "@/types";
+import type { FilterType, Student } from "@/types";
 
 import DashboardHeader from "@/components/admin/DashboardHeader";
 import DisasterModeToggle from "@/components/admin/DisasterModeToggle";
@@ -79,8 +78,6 @@ export default function AdminDashboardPage() {
     isToggling,
   } = useDisasterMode();
 
-  const overrideStatus = useStatusOverride();
-
   // ── Derived ───────────────────────────────────────────────────────────────
   const stats = useMemo(() => computeStats(students), [students]);
   const filteredStudents = useMemo(
@@ -104,10 +101,6 @@ export default function AdminDashboardPage() {
     setIsManuallyRefreshing(false);
   };
 
-  const handleStatusOverride = (student: Student, newStatus: StudentStatus) => {
-    overrideStatus.mutate({ student, newStatus });
-  };
-
   const handleViewDetails = (student: Student) => {
     toast.info(`Details for ${student.name}`);
   };
@@ -119,9 +112,9 @@ export default function AdminDashboardPage() {
       label: "Total Students",
       value: stats.total,
       icon: Users,
-      colorClass: "text-emerald-700 dark:text-emerald-400",  // #047857 / #34D399
-      bgClass: "bg-emerald-100 dark:bg-emerald-500/10",      // #D1FAE5 / #10B981 with 10% opacity
-      ringClass: "ring-emerald-500/20",                      // #10B981 with 20% opacity
+      colorClass: "text-emerald-700 dark:text-emerald-400", // #047857 / #34D399
+      bgClass: "bg-emerald-100 dark:bg-emerald-500/10", // #D1FAE5 / #10B981 with 10% opacity
+      ringClass: "ring-emerald-500/20", // #10B981 with 20% opacity
     },
     {
       key: "SAFE" as FilterType,
@@ -164,9 +157,9 @@ export default function AdminDashboardPage() {
       label: "Unknown",
       value: stats.UNKNOWN,
       icon: HelpCircle,
-      colorClass: "text-purple-700 dark:text-purple-400",  // #7E22CE / #C084FC
-      bgClass: "bg-purple-100 dark:bg-purple-500/10",      // #F3E8FF / #A855F7 with 10% opacity
-      ringClass: "ring-purple-500/20",                     // #A855F7 with 20% opacity
+      colorClass: "text-purple-700 dark:text-purple-400", // #7E22CE / #C084FC
+      bgClass: "bg-purple-100 dark:bg-purple-500/10", // #F3E8FF / #A855F7 with 10% opacity
+      ringClass: "ring-purple-500/20", // #A855F7 with 20% opacity
     },
   ];
 
@@ -180,7 +173,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Fixed Header */}
-      <div 
+      <div
         className="relative z-10 shrink-0 mx-auto w-full max-w-screen-2xl px-4 pt-8 pb-6 sm:px-6 lg:px-10 border-b"
         style={{ borderColor: "rgb(var(--border-primary))" }}
       >
@@ -265,7 +258,6 @@ export default function AdminDashboardPage() {
                 <StudentTable
                   students={filteredStudents}
                   isLoading={studentsLoading}
-                  onStatusOverride={handleStatusOverride}
                   onViewDetails={handleViewDetails}
                   onRefresh={() => refetchStudents()}
                 />

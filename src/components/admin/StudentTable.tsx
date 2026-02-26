@@ -2,22 +2,20 @@
 
 import { useState, useMemo } from "react";
 import {
-  MoreHorizontal,
   ChevronUp,
   ChevronDown,
   Search,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import type { Student, StudentStatus } from "@/types";
-import { STATUS_CONFIG, formatTimestamp } from "@/lib/utils";
+import type { Student } from "@/types";
+import { formatTimestamp } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
 import { cn } from "@/lib/cn";
 
 interface StudentTableProps {
   students: Student[];
   isLoading: boolean;
-  onStatusOverride: (student: Student, newStatus: StudentStatus) => void;
   onViewDetails: (student: Student) => void;
   onRefresh: () => void;
 }
@@ -25,24 +23,14 @@ interface StudentTableProps {
 type SortKey = "name" | "student_id" | "last_status" | "last_update_timestamp";
 type SortDir = "asc" | "desc";
 
-const STATUSES: StudentStatus[] = [
-  "SAFE",
-  "NEEDS_ASSISTANCE",
-  "CRITICAL",
-  "EVACUATED",
-  "UNKNOWN",
-];
-
 export default function StudentTable({
   students,
   isLoading,
-  onStatusOverride,
   onViewDetails,
 }: StudentTableProps) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -151,7 +139,6 @@ export default function StudentTable({
               <th className="px-4 py-3.5 text-left font-bold text-theme-text-secondary font-inter">
                 Source
               </th>
-              <th className="px-4 py-3.5" />
             </tr>
           </thead>
           <tbody>
@@ -162,7 +149,7 @@ export default function StudentTable({
                   className="border-b"
                   style={{ borderColor: "rgb(var(--border-secondary))" }}
                 >
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 5 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
                       <div
                         className="h-4 rounded-md animate-pulse"
@@ -175,7 +162,7 @@ export default function StudentTable({
             ) : filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={5}
                   className="py-12 text-center text-theme-text-tertiary text-base"
                 >
                   No students found.
@@ -183,10 +170,6 @@ export default function StudentTable({
               </tr>
             ) : (
               paginatedData.map((student) => {
-                const cfg =
-                  STATUS_CONFIG[
-                    (student.last_status ?? "UNKNOWN") as StudentStatus
-                  ];
                 return (
                   <tr
                     key={student.student_id}
@@ -216,72 +199,6 @@ export default function StudentTable({
                           {student.last_update_source}
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="relative inline-block">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMenuOpenId((id) =>
-                              id === student.student_id
-                                ? null
-                                : student.student_id,
-                            )
-                          }
-                          className="rounded-lg p-1.5 text-theme-text-tertiary hover:text-theme-text-primary transition"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-
-                        {menuOpenId === student.student_id && (
-                          <div
-                            className="absolute right-0 z-10 mt-1 w-52 rounded-xl ring-1 shadow-2xl py-1"
-                            style={{
-                              backgroundColor: "rgb(var(--bg-secondary))",
-                              borderColor: "rgb(var(--border-primary))",
-                            }}
-                          >
-                            <button
-                              type="button"
-                              className="w-full px-4 py-2 text-left text-sm text-theme-text-primary"
-                              onClick={() => {
-                                onViewDetails(student);
-                                setMenuOpenId(null);
-                              }}
-                            >
-                              View details
-                            </button>
-                            <div
-                              className="my-1 border-t"
-                              style={{
-                                borderColor: "rgb(var(--border-primary))",
-                              }}
-                            />
-                            <p className="px-4 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-theme-text-tertiary">
-                              Override status
-                            </p>
-                            {STATUSES.map((s) => {
-                              const c = STATUS_CONFIG[s];
-                              return (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  className={cn(
-                                    "w-full px-4 py-2 text-left text-sm transition",
-                                    c.color,
-                                  )}
-                                  onClick={() => {
-                                    onStatusOverride(student, s);
-                                    setMenuOpenId(null);
-                                  }}
-                                >
-                                  {c.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 );

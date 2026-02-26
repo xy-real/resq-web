@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   History,
   CheckCircle,
@@ -9,10 +9,12 @@ import {
   MessageSquare,
   Filter,
   Search,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { StudentStatus } from "@/types";
 import { STATUS_CONFIG } from "@/lib/utils";
+import FilterModal, { type FilterState } from "./FilterModal";
 
 interface StatusLog {
   id: string;
@@ -24,73 +26,87 @@ interface StatusLog {
   validation_flag: boolean;
 }
 
-type SourceFilter = "all" | "APP" | "SMS";
-type ValidationFilter = "all" | "valid" | "invalid";
-type StatusFilterType = "all" | StudentStatus;
-
-// Mock data - replace with actual API call
-const MOCK_LOGS: StatusLog[] = [
-  {
-    id: "1",
-    student_id: "24-1-00123",
-    student_name: "Juan dela Cruz",
-    status: "SAFE",
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    source: "APP",
-    validation_flag: true,
-  },
-  {
-    id: "2",
-    student_id: "23-1-02589",
-    student_name: "Maria Santos",
-    status: "NEEDS_ASSISTANCE",
-    timestamp: new Date(Date.now() - 1000 * 60 * 15),
-    source: "SMS",
-    validation_flag: true,
-  },
-  {
-    id: "3",
-    student_id: "24-1-00456",
-    student_name: "Pedro Reyes",
-    status: "CRITICAL",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    source: "APP",
-    validation_flag: true,
-  },
-  {
-    id: "4",
-    student_id: "23-1-01789",
-    student_name: "Ana Garcia",
-    status: "EVACUATED",
-    timestamp: new Date(Date.now() - 1000 * 60 * 45),
-    source: "SMS",
-    validation_flag: false,
-  },
-];
+interface StatusLogResponse {
+  id: string;
+  student_id: string;
+  status: StudentStatus;
+  timestamp: string;
+  source: "APP" | "SMS";
+  validation_flag: boolean;
+  students?: {
+    name: string;
+    email: string;
+  };
+}
 
 export default function StudentLog() {
-  const [logs] = useState<StatusLog[]>(MOCK_LOGS);
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [validationFilter, setValidationFilter] =
-    useState<ValidationFilter>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("all");
+  const [logs, setLogs] = useState<StatusLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState>({
+    source: "all",
+    validation: "all",
+    status: "all",
+  });
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  // Fetch status logs from API
+  useEffect(() => {
+    async function fetchStatusLogs() {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/status-logs");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch status logs");
+        }
+
+        const data: StatusLogResponse[] = await response.json();
+
+        // Transform API response to StatusLog format
+        const transformedLogs: StatusLog[] = data.map((log) => ({
+          id: log.id,
+          student_id: log.student_id,
+          student_name: log.students?.name,
+          status: log.status,
+          timestamp: new Date(log.timestamp),
+          source: log.source,
+          validation_flag: log.validation_flag,
+        }));
+
+        setLogs(transformedLogs);
+      } catch (error) {
+        console.error("Error fetching status logs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchStatusLogs();
+
+    // Poll for new logs every 30 seconds
+    const interval = setInterval(fetchStatusLogs, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      const sourceMatch = sourceFilter === "all" || log.source === sourceFilter;
+      const sourceMatch =
+        filters.source === "all" || log.source === filters.source;
       const validationMatch =
-        validationFilter === "all" ||
-        (validationFilter === "valid" && log.validation_flag) ||
-        (validationFilter === "invalid" && !log.validation_flag);
-      const statusMatch = statusFilter === "all" || log.status === statusFilter;
+        filters.validation === "all" ||
+        (filters.validation === "valid" && log.validation_flag) ||
+        (filters.validation === "invalid" && !log.validation_flag);
+      const statusMatch =
+        filters.status === "all" || log.status === filters.status;
       const searchMatch =
         searchQuery === "" ||
         log.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.student_name?.toLowerCase().includes(searchQuery.toLowerCase());
       return sourceMatch && validationMatch && statusMatch && searchMatch;
     });
-  }, [logs, sourceFilter, validationFilter, statusFilter, searchQuery]);
+  }, [logs, filters, searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -145,98 +161,44 @@ export default function StudentLog() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mt-3 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-theme-text-tertiary" />
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Source:
-            </span>
-            {(["all", "APP", "SMS"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSourceFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  sourceFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  sourceFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : filter}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Validation:
-            </span>
-            {(["all", "valid", "invalid"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setValidationFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  validationFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  validationFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Status:
-            </span>
-            {(
-              [
-                "all",
-                "SAFE",
-                "NEEDS_ASSISTANCE",
-                "CRITICAL",
-                "EVACUATED",
-                "UNKNOWN",
-              ] as StatusFilterType[]
-            ).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setStatusFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  statusFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  statusFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : STATUS_CONFIG[filter].label}
-              </button>
-            ))}
-          </div>
+        {/* Filter Button */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setIsFilterModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border font-inter hover:bg-theme-interactive-hover"
+            style={{
+              borderColor: "rgb(var(--border-primary))",
+              color: "rgb(var(--text-primary))",
+            }}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {(filters.source !== "all" ||
+              filters.validation !== "all" ||
+              filters.status !== "all") && (
+              <span className="ml-1 px-2 py-0.5 rounded-full bg-purple-500 text-white text-xs font-bold">
+                Active
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Log Entries */}
       <div className="space-y-2">
-        {filteredLogs.length === 0 ? (
+        {isLoading ? (
+          <div
+            className="rounded-xl ring-1 p-12 text-center"
+            style={{
+              backgroundColor: "rgb(var(--bg-secondary))",
+              borderColor: "rgb(var(--border-primary))",
+            }}
+          >
+            <Loader2 className="h-12 w-12 text-theme-text-tertiary mx-auto mb-3 animate-spin" />
+            <p className="text-theme-text-secondary">Loading status logs...</p>
+          </div>
+        ) : filteredLogs.length === 0 ? (
           <div
             className="rounded-xl ring-1 p-12 text-center"
             style={{
@@ -270,7 +232,7 @@ export default function StudentLog() {
                   }}
                 >
                   {/* Validation Icon */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {log.validation_flag ? (
                       <CheckCircle className="h-5 w-5 text-emerald-400" />
                     ) : (
@@ -305,7 +267,7 @@ export default function StudentLog() {
                   </div>
 
                   {/* Source Badge */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div
                       className="flex items-center gap-2 px-3.5 py-2 rounded-lg"
                       style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}
@@ -326,6 +288,14 @@ export default function StudentLog() {
           </div>
         )}
       </div>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
     </div>
   );
 }
