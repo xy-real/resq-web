@@ -2,9 +2,9 @@
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[calc(100vh-72px)] overflow-hidden">
+    <section className="relative min-h-[calc(100vh-72px)] overflow-hidden" style={{ backgroundColor: 'rgb(5, 7, 10)' }}>
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom right, rgb(5, 7, 10), rgb(10, 15, 25), rgb(8, 12, 22))' }} />
       
       {/* Animated background elements */}
       <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl opacity-40 animate-pulse" />
@@ -19,19 +19,11 @@ export function HeroSection() {
             
             {/* Main Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-[1.05] tracking-tight">
-              <span className="block text-white">The New Standard</span>
-              <span className="block">
-                <span className="text-white">for </span>
-                <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
-                  Mapping and
-                </span>
+              Connecting{' '}
+              <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent animate-pulse">
+                Students and Responders
               </span>
-              <span className="block">
-                <span className="bg-gradient-to-r from-purple-500 via-cyan-300 to-cyan-400 bg-clip-text text-transparent drop-shadow-lg">
-                  Accessing
-                </span>
-                <span className="text-white"> Cloud Data</span>
-              </span>
+              <span className="text-white"> When It Matters Most.</span>
             </h1>
 
             {/* Supporting Paragraph */}
@@ -44,11 +36,7 @@ export function HeroSection() {
               <button className="rounded-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 px-8 py-4 text-base font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-purple-600/50 group">
                 <span className="flex items-center justify-center">
                   Sign up
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </span>
-              </button>
-              <button className="rounded-full border-2 border-cyan-400/60 hover:border-cyan-400 px-8 py-4 text-base font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all duration-300 shadow-sm hover:shadow-cyan-500/30">
-                Sign in
               </button>
             </div>
 
