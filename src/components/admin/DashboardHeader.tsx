@@ -35,15 +35,15 @@ export default function DashboardHeader({
           />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-theme-text-primary tracking-tight">
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-theme-text-primary tracking-tight leading-tight">
             VSU Typhoon Response Dashboard
           </h1>
-          <p className="text-sm text-theme-text-secondary">
+          <p className="text-base text-theme-text-secondary mt-1">
             Monitor and manage student safety status
           </p>
         </div>
         {isDisasterMode && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400 ring-1 ring-red-500/30 animate-pulse">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-400 ring-1 ring-red-500/30 animate-pulse font-inter">
             DISASTER MODE
           </span>
         )}
@@ -55,7 +55,7 @@ export default function DashboardHeader({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-theme-bg-tertiary hover:bg-theme-interactive-hover disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-theme-text-secondary ring-1 ring-theme-border-primary transition"
+          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-theme-bg-tertiary hover:bg-theme-interactive-hover disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-base font-semibold text-theme-text-secondary ring-1 ring-theme-border-primary transition font-inter"
         >
           <RefreshCw
             className={cn(

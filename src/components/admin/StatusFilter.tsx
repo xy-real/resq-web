@@ -50,7 +50,7 @@ export default function StatusFilter({
             type="button"
             onClick={() => onChange(key)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium ring-1 transition-all duration-150",
+              "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-base font-semibold ring-1 transition-all duration-150 font-inter",
               isActive
                 ? cn(cfg.bg, cfg.color, cfg.ring, "ring-opacity-60")
                 : "bg-transparent text-theme-text-secondary hover:text-theme-text-primary",
@@ -67,7 +67,7 @@ export default function StatusFilter({
             {label}
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums",
+                "rounded-full px-2 py-0.5 text-sm font-bold tabular-nums font-inter",
                 isActive ? cn(cfg.bg, cfg.color) : "text-theme-text-secondary",
               )}
               style={

@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
-import { Syne, JetBrains_Mono } from "next/font/google";
+import { Inter, Krub, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
-const syne = Syne({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-syne",
+  variable: "--font-inter",
   display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const krub = Krub({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-krub",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -30,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${krub.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body

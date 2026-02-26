@@ -108,19 +108,21 @@ export default function StudentLog() {
               <History className="h-5 w-5 text-purple-400" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="font-semibold text-theme-text-primary">
+              <p className="font-bold text-lg text-theme-text-primary font-inter">
                 Student Status Log
               </p>
-              <p className="text-xs text-theme-text-secondary">
+              <p className="text-sm text-theme-text-secondary mt-0.5">
                 Real-time history of all student status updates
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-theme-text-primary">
+            <p className="text-3xl font-bold text-theme-text-primary font-inter">
               {filteredLogs.length}
             </p>
-            <p className="text-xs text-theme-text-tertiary">Total Entries</p>
+            <p className="text-sm text-theme-text-tertiary mt-0.5 font-medium">
+              Total Entries
+            </p>
           </div>
         </div>
 
@@ -133,7 +135,7 @@ export default function StudentLog() {
               placeholder="Search by Student ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg text-sm transition-all border"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg text-base transition-all border font-krub"
               style={{
                 backgroundColor: "rgb(var(--bg-primary))",
                 borderColor: "rgb(var(--border-primary))",
@@ -147,7 +149,7 @@ export default function StudentLog() {
         <div className="mt-3 flex flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-theme-text-tertiary" />
-            <span className="text-xs font-semibold text-theme-text-tertiary uppercase tracking-wider">
+            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
               Source:
             </span>
             {(["all", "APP", "SMS"] as const).map((filter) => (
@@ -155,7 +157,7 @@ export default function StudentLog() {
                 key={filter}
                 onClick={() => setSourceFilter(filter)}
                 className={cn(
-                  "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
+                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
                   sourceFilter === filter
                     ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
                     : "text-theme-text-secondary hover:text-theme-text-primary",
@@ -172,7 +174,7 @@ export default function StudentLog() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-theme-text-tertiary uppercase tracking-wider">
+            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
               Validation:
             </span>
             {(["all", "valid", "invalid"] as const).map((filter) => (
@@ -180,7 +182,7 @@ export default function StudentLog() {
                 key={filter}
                 onClick={() => setValidationFilter(filter)}
                 className={cn(
-                  "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
+                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
                   validationFilter === filter
                     ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
                     : "text-theme-text-secondary hover:text-theme-text-primary",
@@ -197,7 +199,7 @@ export default function StudentLog() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-theme-text-tertiary uppercase tracking-wider">
+            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
               Status:
             </span>
             {(
@@ -214,7 +216,7 @@ export default function StudentLog() {
                 key={filter}
                 onClick={() => setStatusFilter(filter)}
                 className={cn(
-                  "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
+                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
                   statusFilter === filter
                     ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
                     : "text-theme-text-secondary hover:text-theme-text-primary",
@@ -279,24 +281,24 @@ export default function StudentLog() {
                   {/* Student Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-theme-text-primary">
+                      <p className="font-bold text-base text-theme-text-primary">
                         {log.student_name || "Unknown Student"}
                       </p>
-                      <span className="text-xs text-theme-text-tertiary font-mono">
+                      <span className="text-sm text-theme-text-tertiary font-mono">
                         {log.student_id}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1.5">
                       <span
                         className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold",
+                          "inline-flex items-center px-2.5 py-1 rounded-full text-sm font-bold font-inter",
                           statusConfig.bg,
                           statusConfig.color,
                         )}
                       >
                         {statusConfig.label}
                       </span>
-                      <span className="text-xs text-theme-text-tertiary">
+                      <span className="text-sm text-theme-text-tertiary">
                         {log.timestamp.toLocaleString()}
                       </span>
                     </div>
@@ -305,15 +307,15 @@ export default function StudentLog() {
                   {/* Source Badge */}
                   <div className="flex-shrink-0">
                     <div
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-lg"
                       style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}
                     >
                       {log.source === "APP" ? (
-                        <Smartphone className="h-3.5 w-3.5 text-theme-text-tertiary" />
+                        <Smartphone className="h-4 w-4 text-theme-text-tertiary" />
                       ) : (
-                        <MessageSquare className="h-3.5 w-3.5 text-theme-text-tertiary" />
+                        <MessageSquare className="h-4 w-4 text-theme-text-tertiary" />
                       )}
-                      <span className="text-xs font-medium text-theme-text-secondary">
+                      <span className="text-sm font-semibold text-theme-text-secondary font-inter">
                         {log.source}
                       </span>
                     </div>
