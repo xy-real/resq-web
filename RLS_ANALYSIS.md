@@ -5,9 +5,11 @@
 ### **Problem 1: Email Verification Prevents Immediate Authentication**
 
 **From ERD.txt:**
+
 > Email/Password (requires email verification via Gmail)
 
 **What happens in the old auth.ts:**
+
 ```typescript
 // 1. User signs up (email verification required)
 const { data: authData } = await supabase.auth.signUp({...});
@@ -22,6 +24,7 @@ await supabase.from('admins').insert({
 ```
 
 **RLS Policy Check:**
+
 ```sql
 -- Policy: admins_insert_own
 -- Condition: auth.uid() = user_id
@@ -30,6 +33,7 @@ await supabase.from('admins').insert({
 ```
 
 **Why `auth.uid()` is NULL:**
+
 - Supabase only sets `auth.uid()` AFTER the user confirms their email
 - Until email confirmation, the user has NO active session
 - Therefore, the RLS check fails immediately
@@ -39,6 +43,7 @@ await supabase.from('admins').insert({
 ### **Problem 2: Client-Side Cannot Use Admin API**
 
 **The old code:**
+
 ```typescript
 if (insertError) {
   // ❌ THIS FAILS - admin methods require SERVICE_ROLE_KEY
@@ -48,12 +53,14 @@ if (insertError) {
 ```
 
 **Why it fails:**
+
 1. `createClient()` from `supabase/client.ts` uses `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 2. `auth.admin.*` methods require `SUPABASE_SERVICE_ROLE_KEY`
 3. Service role keys CANNOT be exposed to the browser (security risk)
 4. Therefore, this rollback code never executes successfully
 
 **Browser Console Error:**
+
 ```
 Error: Not allowed to use admin methods without service role key
 ```
@@ -63,6 +70,7 @@ Error: Not allowed to use admin methods without service role key
 ### **Problem 3: RLS Cannot Be Bypassed from Client**
 
 **The fundamental issue:**
+
 - Client-side code uses ANON key → Subject to ALL RLS policies
 - Service role key required to bypass RLS → Only safe on server-side
 - Cannot insert into admins/students table because:
@@ -71,6 +79,7 @@ Error: Not allowed to use admin methods without service role key
   3. No way to bypass RLS from browser
 
 **RLS Policy Logic (from ERD.txt):**
+
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
 │ Policy: admins_insert_own                                             │
@@ -83,6 +92,7 @@ Error: Not allowed to use admin methods without service role key
 ```
 
 The policy states "authenticated users" but after signup with email verification:
+
 - User exists in `auth.users` table ✅
 - User has NOT confirmed email ❌
 - User has NO active session ❌
@@ -93,6 +103,7 @@ The policy states "authenticated users" but after signup with email verification
 ## ✅ The Solution
 
 ### **1. Created Admin Client** (`src/lib/supabase/admin.ts`)
+
 ```typescript
 export function createAdminClient() {
   return createClient(
@@ -103,12 +114,13 @@ export function createAdminClient() {
         autoRefreshToken: false,
         persistSession: false,
       },
-    }
+    },
   );
 }
 ```
 
 **Why this works:**
+
 - Uses `SUPABASE_SERVICE_ROLE_KEY` instead of anon key
 - **Bypasses ALL RLS policies**
 - Only available server-side (API routes, Server Actions)
@@ -119,6 +131,7 @@ export function createAdminClient() {
 ### **2. Created Server-Side Signup API** (`src/app/api/auth/signup/route.ts`)
 
 **New registration flow:**
+
 ```typescript
 // Server-side with admin client
 const supabase = createAdminClient(); // ⚡ Service role = bypasses RLS
@@ -128,11 +141,11 @@ const { data: authData } = await supabase.auth.admin.createUser({
   email,
   password,
   email_confirm: true, // ⚡ Auto-confirm (or false for email verification)
-  user_metadata: { name, student_id, contact_number }
+  user_metadata: { name, student_id, contact_number },
 });
 
 // 2. Insert into admins/students (RLS bypassed)
-await supabase.from('admins').insert({
+await supabase.from("admins").insert({
   user_id: authData.user.id,
   email: email,
   name: name,
@@ -145,6 +158,7 @@ if (insertError) {
 ```
 
 **Benefits:**
+
 1. ✅ RLS bypassed with service role key
 2. ✅ `auth.admin.createUser()` works (proper admin client)
 3. ✅ Can set `email_confirm: true` to skip verification
@@ -156,13 +170,21 @@ if (insertError) {
 ### **3. Updated Client-Side auth.ts**
 
 **New signup function:**
+
 ```typescript
 export async function signUp(data: SignUpData): Promise<AuthResponse> {
   // 1. Call server-side API
-  const response = await fetch('/api/auth/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name, studentId, contactNumber, isAdmin })
+  const response = await fetch("/api/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password,
+      name,
+      studentId,
+      contactNumber,
+      isAdmin,
+    }),
   });
 
   // 2. Server creates user + admin/student record (bypassing RLS)
@@ -173,16 +195,18 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
 
   // 3. Sign in to establish session
   const supabase = createClient();
-  const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
-  });
+  const { data: authData, error: signInError } =
+    await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
 
   return { user: authData.user, error: null };
 }
 ```
 
 **How this fixes the issues:**
+
 1. ✅ Server-side uses service role → RLS bypassed
 2. ✅ User auto-confirmed (or email verify flow handled properly)
 3. ✅ Admin methods work with proper credentials
@@ -193,20 +217,21 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
 
 ## 📊 Before vs After Comparison
 
-| Issue | Before (Client-Side) | After (Server-Side) |
-|-------|---------------------|---------------------|
-| **RLS Bypass** | ❌ Cannot bypass RLS with anon key | ✅ Service role bypasses RLS |
-| **Email Verification** | ❌ Blocks subsequent inserts | ✅ Auto-confirm or handled properly |
-| **Admin API** | ❌ `auth.admin.*` fails with anon key | ✅ Works with service role |
-| **Rollback** | ❌ Cannot delete auth user | ✅ Proper rollback capability |
-| **Security** | ❌ Attempted (failed) admin calls | ✅ Service key stays server-side |
-| **Session** | ❌ No session after unconfirmed signup | ✅ Sign in after creation establishes session |
+| Issue                  | Before (Client-Side)                   | After (Server-Side)                           |
+| ---------------------- | -------------------------------------- | --------------------------------------------- |
+| **RLS Bypass**         | ❌ Cannot bypass RLS with anon key     | ✅ Service role bypasses RLS                  |
+| **Email Verification** | ❌ Blocks subsequent inserts           | ✅ Auto-confirm or handled properly           |
+| **Admin API**          | ❌ `auth.admin.*` fails with anon key  | ✅ Works with service role                    |
+| **Rollback**           | ❌ Cannot delete auth user             | ✅ Proper rollback capability                 |
+| **Security**           | ❌ Attempted (failed) admin calls      | ✅ Service key stays server-side              |
+| **Session**            | ❌ No session after unconfirmed signup | ✅ Sign in after creation establishes session |
 
 ---
 
 ## 🎯 Testing the Fix
 
 ### **Test 1: Admin Registration**
+
 ```bash
 # Should now succeed
 curl -X POST http://localhost:3000/api/auth/signup \
@@ -220,13 +245,16 @@ curl -X POST http://localhost:3000/api/auth/signup \
 ```
 
 **Expected:**
+
 - ✅ Auth user created in `auth.users`
 - ✅ Record inserted into `admins` table
 - ✅ User can sign in immediately
 - ✅ No RLS errors
 
 ### **Test 2: First Admin (Bootstrap)**
+
 The first admin can now register because:
+
 1. Server-side API uses service role (bypasses RLS entirely)
 2. No dependency on existing admin records
 3. `admins_insert_own` and `admins_insert_admins` policies don't matter when using service role
@@ -236,6 +264,7 @@ The first admin can now register because:
 ## 🔐 Security Notes
 
 ### **Why This Is Secure:**
+
 1. ✅ **Service role key** only in `.env.local` (never committed to git)
 2. ✅ **Server-side only** usage (API route, not browser)
 3. ✅ **No CORS issues** (same-origin API call)
@@ -243,6 +272,7 @@ The first admin can now register because:
 5. ✅ **Rollback mechanism** prevents orphaned auth users
 
 ### **Important Reminders:**
+
 - 🔒 NEVER expose `SUPABASE_SERVICE_ROLE_KEY` in client code
 - 🔒 NEVER commit `.env.local` to version control
 - 🔒 Always validate inputs in the API route

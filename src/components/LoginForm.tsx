@@ -69,10 +69,12 @@ export default function LoginForm() {
 
       if (error) {
         // Handle email not confirmed error
-        if (error.message.toLowerCase().includes('email') && 
-            (error.message.toLowerCase().includes('confirm') || 
-             error.message.toLowerCase().includes('verified') ||
-             error.message.toLowerCase().includes('verification'))) {
+        if (
+          error.message.toLowerCase().includes("email") &&
+          (error.message.toLowerCase().includes("confirm") ||
+            error.message.toLowerCase().includes("verified") ||
+            error.message.toLowerCase().includes("verification"))
+        ) {
           setErrors({
             general: "Please verify your email address before signing in.",
           });

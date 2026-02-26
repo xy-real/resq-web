@@ -23,7 +23,7 @@ export default function DashboardHeader({
   const handleLogout = async () => {
     try {
       const { error } = await signOut();
-      
+
       if (error) {
         toast.error("Logout failed", {
           description: error.message,

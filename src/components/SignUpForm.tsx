@@ -129,7 +129,7 @@ export default function SignUpForm() {
 
       // Success! (either with immediate login or email verification required)
       setIsSuccess(true);
-      
+
       if (message) {
         // Email verification required
         toast.success("Registration successful!", {
