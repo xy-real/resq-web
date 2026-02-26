@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
                   type="button"
                   onClick={() => setActiveTab(key)}
                   className={
-                    `inline-flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-semibold transition-all ` +
+                    `inline-flex items-center gap-2 rounded-t-lg px-5 py-3 text-base font-semibold transition-all font-inter ` +
                     (isActive
                       ? "text-sky-500 border border-transparent"
                       : "text-theme-text-tertiary hover:text-theme-text-secondary border border-transparent hover:bg-theme-interactive-hover")

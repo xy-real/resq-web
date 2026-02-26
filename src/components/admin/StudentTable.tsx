@@ -84,7 +84,7 @@ export default function StudentTable({
           placeholder="Search name or ID…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg pl-9 pr-4 py-2 text-sm text-theme-text-primary placeholder:text-theme-text-tertiary ring-1 focus:outline-none focus:ring-sky-500/50 transition"
+          className="w-full rounded-lg pl-9 pr-4 py-2.5 text-base text-theme-text-primary placeholder:text-theme-text-tertiary ring-1 focus:outline-none focus:ring-sky-500/50 transition font-krub"
           style={{
             backgroundColor: "rgb(var(--bg-secondary))",
             borderColor: "rgb(var(--border-primary))",
@@ -97,7 +97,7 @@ export default function StudentTable({
         className="overflow-x-auto rounded-xl ring-1"
         style={{ borderColor: "rgb(var(--border-primary))" }}
       >
-        <table className="w-full text-sm">
+        <table className="w-full text-base">
           <thead>
             <tr
               className="border-b"
@@ -117,17 +117,17 @@ export default function StudentTable({
                 <th
                   key={key}
                   onClick={() => handleSort(key)}
-                  className="cursor-pointer px-4 py-3 text-left font-semibold text-theme-text-secondary hover:text-theme-text-primary transition select-none"
+                  className="cursor-pointer px-4 py-3.5 text-left font-bold text-theme-text-secondary hover:text-theme-text-primary transition select-none font-inter"
                 >
                   <span className="inline-flex items-center gap-1">
                     {label} <SortIcon col={key} />
                   </span>
                 </th>
               ))}
-              <th className="px-4 py-3 text-left font-semibold text-theme-text-secondary">
+              <th className="px-4 py-3.5 text-left font-bold text-theme-text-secondary font-inter">
                 Source
               </th>
-              <th className="px-4 py-3" />
+              <th className="px-4 py-3.5" />
             </tr>
           </thead>
           <tbody>
@@ -152,7 +152,7 @@ export default function StudentTable({
               <tr>
                 <td
                   colSpan={6}
-                  className="py-12 text-center text-theme-text-tertiary"
+                  className="py-12 text-center text-theme-text-tertiary text-base"
                 >
                   No students found.
                 </td>
@@ -168,16 +168,16 @@ export default function StudentTable({
                       borderColor: "rgb(var(--border-secondary))",
                     }}
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-theme-text-tertiary">
+                    <td className="px-4 py-3.5 font-mono text-sm text-theme-text-tertiary">
                       {student.student_id}
                     </td>
-                    <td className="px-4 py-3 font-medium text-theme-text-primary">
+                    <td className="px-4 py-3.5 font-semibold text-theme-text-primary">
                       {student.name}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <StatusBadge status={student.current_status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-theme-text-tertiary tabular-nums whitespace-nowrap">
+                    <td className="px-4 py-3.5 text-sm text-theme-text-tertiary tabular-nums whitespace-nowrap">
                       {formatTimestamp(student.last_update_timestamp)}
                     </td>
                     <td className="px-4 py-3">

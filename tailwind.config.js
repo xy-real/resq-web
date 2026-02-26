@@ -9,7 +9,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-syne)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-krub)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        inter: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        krub: ['var(--font-krub)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       colors: {

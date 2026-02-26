@@ -47,13 +47,13 @@ export default function DisasterModeToggle({
       <div className="flex-1 min-w-0">
         <p
           className={cn(
-            "text-sm font-semibold transition-colors",
+            "text-base font-bold transition-colors font-inter",
             isActive ? "text-red-500" : "text-theme-text-primary",
           )}
         >
           Disaster Mode
         </p>
-        <p className="text-xs text-theme-text-tertiary truncate">
+        <p className="text-sm text-theme-text-tertiary truncate mt-0.5">
           {isActive ? "Active — typhoon response engaged" : "Normal operations"}
         </p>
       </div>

@@ -57,13 +57,13 @@ export default function StatsCard({
       </div>
       <p
         className={cn(
-          "mt-4 text-3xl font-bold tabular-nums tracking-tight",
+          "mt-4 text-4xl font-bold tabular-nums tracking-tight font-inter",
           colorClass,
         )}
       >
         {value.toLocaleString()}
       </p>
-      <p className="mt-1 text-sm font-medium text-theme-text-secondary">
+      <p className="mt-2 text-base font-semibold text-theme-text-secondary tracking-tight">
         {label}
       </p>
     </button>
