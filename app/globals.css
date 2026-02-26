@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --font-syne: 'Syne', sans-serif;
@@ -19,7 +17,6 @@ code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -38,7 +35,6 @@ code, pre, .font-mono {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* Tab trigger active indicator */
 [data-state="active"] {
   position: relative;
 }
