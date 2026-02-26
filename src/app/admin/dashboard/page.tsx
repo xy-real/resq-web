@@ -209,8 +209,6 @@ export default function AdminDashboardPage() {
               colorClass={card.colorClass}
               bgClass={card.bgClass}
               ringClass={card.ringClass}
-              isActive={activeFilter === card.key}
-              onClick={() => setActiveFilter(card.key)}
             />
           ))}
         </div>
