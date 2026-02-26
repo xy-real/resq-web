@@ -10,8 +10,6 @@ interface StatsCardProps {
   colorClass: string; // e.g. 'text-emerald-400'
   bgClass: string; // e.g. 'bg-emerald-500/10'
   ringClass?: string;
-  onClick?: () => void;
-  isActive?: boolean;
 }
 
 export default function StatsCard({
@@ -21,39 +19,27 @@ export default function StatsCard({
   colorClass,
   bgClass,
   ringClass = "ring-white/5",
-  onClick,
-  isActive,
 }: StatsCardProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "group relative w-full text-left rounded-xl p-5 ring-1 transition-all duration-200",
-        "hover:bg-theme-interactive-hover",
-        isActive && "ring-2 ring-offset-0",
-        onClick ? "cursor-pointer" : "cursor-default",
-      )}
+    <div
+      className="group relative w-full text-left rounded-xl p-5 ring-1 transition-all duration-200 hover:ring-2 cursor-default"
       style={{
         backgroundColor: "rgb(var(--bg-secondary))",
         borderColor: "rgb(var(--border-primary))",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "rgb(var(--interactive-hover))";
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "rgb(var(--bg-secondary))";
+        e.currentTarget.style.transform = "translateY(0)";
       }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className={cn("rounded-lg p-2.5", bgClass)}>
           <Icon className={cn("h-5 w-5", colorClass)} strokeWidth={1.8} />
         </div>
-        {isActive && (
-          <span
-            className={cn(
-              "text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full",
-              bgClass,
-              colorClass,
-            )}
-          >
-            Active
-          </span>
-        )}
       </div>
       <p
         className={cn(
@@ -66,6 +52,6 @@ export default function StatsCard({
       <p className="mt-2 text-base font-semibold text-theme-text-secondary tracking-tight">
         {label}
       </p>
-    </button>
+    </div>
   );
 }

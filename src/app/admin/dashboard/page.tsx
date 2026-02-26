@@ -35,7 +35,7 @@ const StudentMap = dynamic(() => import("@/components/admin/StudentMap"), {
   ssr: false,
   loading: () => (
     <div
-      className="flex items-center justify-center h-[520px] rounded-xl ring-1"
+      className="flex items-center justify-center h-130 rounded-xl ring-1"
       style={{
         backgroundColor: "rgb(var(--bg-secondary))",
         borderColor: "rgb(var(--border-primary))",
@@ -119,9 +119,9 @@ export default function AdminDashboardPage() {
       label: "Total Students",
       value: stats.total,
       icon: Users,
-      colorClass: "text-slate-900 dark:text-slate-300",
-      bgClass: "bg-slate-200 dark:bg-slate-500/10",
-      ringClass: "ring-slate-500/20",
+      colorClass: "text-emerald-700 dark:text-emerald-400",  // #047857 / #34D399
+      bgClass: "bg-emerald-100 dark:bg-emerald-500/10",      // #D1FAE5 / #10B981 with 10% opacity
+      ringClass: "ring-emerald-500/20",                      // #10B981 with 20% opacity
     },
     {
       key: "SAFE" as FilterType,
@@ -164,28 +164,35 @@ export default function AdminDashboardPage() {
       label: "Unknown",
       value: stats.UNKNOWN,
       icon: HelpCircle,
-      colorClass: "text-slate-800 dark:text-slate-400",
-      bgClass: "bg-slate-200 dark:bg-slate-500/10",
-      ringClass: "ring-slate-500/20",
+      colorClass: "text-purple-700 dark:text-purple-400",  // #7E22CE / #C084FC
+      bgClass: "bg-purple-100 dark:bg-purple-500/10",      // #F3E8FF / #A855F7 with 10% opacity
+      ringClass: "ring-purple-500/20",                     // #A855F7 with 20% opacity
     },
   ];
 
   return (
     <main
-      className="min-h-screen"
+      className="h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "rgb(var(--bg-primary))" }}
     >
       {isDisasterMode && (
         <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_-20%,rgba(239,68,68,0.08),transparent)]" />
       )}
 
-      <div className="relative z-10 mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
+      {/* Fixed Header */}
+      <div 
+        className="relative z-10 shrink-0 mx-auto w-full max-w-screen-2xl px-4 pt-8 pb-6 sm:px-6 lg:px-10 border-b"
+        style={{ borderColor: "rgb(var(--border-primary))" }}
+      >
         <DashboardHeader
           isRefreshing={isManuallyRefreshing || studentsRefreshing}
           isDisasterMode={isDisasterMode}
           onRefresh={handleRefresh}
         />
+      </div>
 
+      {/* Scrollable Content */}
+      <div className="relative z-10 flex-1 overflow-y-auto mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-10 space-y-8">
         <DisasterModeToggle
           isActive={isDisasterMode}
           isLoading={settingsLoading || isToggling}
@@ -202,8 +209,6 @@ export default function AdminDashboardPage() {
               colorClass={card.colorClass}
               bgClass={card.bgClass}
               ringClass={card.ringClass}
-              isActive={activeFilter === card.key}
-              onClick={() => setActiveFilter(card.key)}
             />
           ))}
         </div>

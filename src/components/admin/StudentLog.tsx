@@ -32,6 +32,24 @@ type StatusFilterType = "all" | StudentStatus;
 const MOCK_LOGS: StatusLog[] = [
   {
     id: "1",
+    student_id: "VSU-2024-010",
+    student_name: "Gloria Mendoza",
+    status: "CRITICAL",
+    timestamp: new Date(Date.now() - 1000 * 60 * 2),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "2",
+    student_id: "VSU-2024-003",
+    student_name: "Pedro Reyes",
+    status: "CRITICAL",
+    timestamp: new Date(Date.now() - 1000 * 60 * 3),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "3",
     student_id: "VSU-2024-001",
     student_name: "Juan dela Cruz",
     status: "SAFE",
@@ -40,30 +58,111 @@ const MOCK_LOGS: StatusLog[] = [
     validation_flag: true,
   },
   {
-    id: "2",
-    student_id: "VSU-2024-002",
-    student_name: "Maria Santos",
-    status: "NEEDS_ASSISTANCE",
-    timestamp: new Date(Date.now() - 1000 * 60 * 15),
-    source: "SMS",
-    validation_flag: true,
-  },
-  {
-    id: "3",
-    student_id: "VSU-2024-003",
-    student_name: "Pedro Reyes",
-    status: "CRITICAL",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
+    id: "4",
+    student_id: "VSU-2024-008",
+    student_name: "Elena Ramos",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 7),
     source: "APP",
     validation_flag: true,
   },
   {
-    id: "4",
+    id: "5",
+    student_id: "VSU-2024-005",
+    student_name: "Roberto Fernandez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 8),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "6",
+    student_id: "VSU-2024-011",
+    student_name: "Hector Cruz",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 10),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "7",
+    student_id: "VSU-2024-002",
+    student_name: "Maria Santos",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 12),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "8",
+    student_id: "VSU-2024-006",
+    student_name: "Carmen Lopez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 15),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "9",
+    student_id: "VSU-2024-007",
+    student_name: "Diego Martinez",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 20),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "10",
     student_id: "VSU-2024-004",
     student_name: "Ana Garcia",
     status: "EVACUATED",
     timestamp: new Date(Date.now() - 1000 * 60 * 45),
     source: "SMS",
+    validation_flag: false,
+  },
+  {
+    id: "11",
+    student_id: "VSU-2024-012",
+    student_name: "Isabel Navarro",
+    status: "EVACUATED",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "12",
+    student_id: "VSU-2024-001",
+    student_name: "Juan dela Cruz",
+    status: "UNKNOWN",
+    timestamp: new Date(Date.now() - 1000 * 60 * 65),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "13",
+    student_id: "VSU-2024-005",
+    student_name: "Roberto Fernandez",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 70),
+    source: "APP",
+    validation_flag: true,
+  },
+  {
+    id: "14",
+    student_id: "VSU-2024-002",
+    student_name: "Maria Santos",
+    status: "SAFE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 80),
+    source: "SMS",
+    validation_flag: true,
+  },
+  {
+    id: "15",
+    student_id: "VSU-2024-003",
+    student_name: "Pedro Reyes",
+    status: "NEEDS_ASSISTANCE",
+    timestamp: new Date(Date.now() - 1000 * 60 * 85),
+    source: "APP",
     validation_flag: false,
   },
 ];
@@ -75,6 +174,7 @@ export default function StudentLog() {
     useState<ValidationFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilterPopup, setShowFilterPopup] = useState(false);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -145,92 +245,136 @@ export default function StudentLog() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mt-3 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-theme-text-tertiary" />
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Source:
-            </span>
-            {(["all", "APP", "SMS"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSourceFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  sourceFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  sourceFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : filter}
-              </button>
-            ))}
-          </div>
+        {/* Filter Button */}
+        <div className="mt-3 relative">
+          <button
+            type="button"
+            onClick={() => setShowFilterPopup(!showFilterPopup)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all border font-inter hover:bg-theme-interactive-hover"
+            style={{
+              borderColor: "rgb(var(--border-primary))",
+              color: "rgb(var(--text-primary))",
+            }}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {(sourceFilter !== "all" || validationFilter !== "all" || statusFilter !== "all") && (
+              <span className="flex h-2 w-2 rounded-full bg-purple-500" />
+            )}
+          </button>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Validation:
-            </span>
-            {(["all", "valid", "invalid"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setValidationFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  validationFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  validationFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
+          {/* Filter Popup */}
+          {showFilterPopup && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setShowFilterPopup(false)}
+              />
+              
+              {/* Popup */}
+              <div
+                className="absolute left-0 top-full mt-2 z-50 w-[500px] rounded-xl ring-1 shadow-2xl p-5 space-y-4"
+                style={{
+                  backgroundColor: "rgb(var(--bg-secondary))",
+                  borderColor: "rgb(var(--border-primary))",
+                }}
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
-          </div>
+                {/* Source Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Source:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "APP", "SMS"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setSourceFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          sourceFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          sourceFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter === "all" ? "All" : filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider font-inter">
-              Status:
-            </span>
-            {(
-              [
-                "all",
-                "SAFE",
-                "NEEDS_ASSISTANCE",
-                "CRITICAL",
-                "EVACUATED",
-                "UNKNOWN",
-              ] as StatusFilterType[]
-            ).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setStatusFilter(filter)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
-                  statusFilter === filter
-                    ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
-                    : "text-theme-text-secondary hover:text-theme-text-primary",
-                )}
-                style={
-                  statusFilter !== filter
-                    ? { borderColor: "rgb(var(--border-primary))" }
-                    : undefined
-                }
-              >
-                {filter === "all" ? "All" : STATUS_CONFIG[filter].label}
-              </button>
-            ))}
-          </div>
+                {/* Validation Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Validation:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "valid", "invalid"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setValidationFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          validationFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          validationFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <p className="text-xs font-bold text-theme-text-tertiary uppercase tracking-wider mb-2 font-inter">
+                    Status:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        "all",
+                        "SAFE",
+                        "NEEDS_ASSISTANCE",
+                        "CRITICAL",
+                        "EVACUATED",
+                        "UNKNOWN",
+                      ] as StatusFilterType[]
+                    ).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setStatusFilter(filter)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-semibold transition-all border font-inter",
+                          statusFilter === filter
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40"
+                            : "text-theme-text-secondary hover:text-theme-text-primary",
+                        )}
+                        style={
+                          statusFilter !== filter
+                            ? { borderColor: "rgb(var(--border-primary))" }
+                            : undefined
+                        }
+                      >
+                        {filter === "all" ? "All" : STATUS_CONFIG[filter].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -270,7 +414,7 @@ export default function StudentLog() {
                   }}
                 >
                   {/* Validation Icon */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {log.validation_flag ? (
                       <CheckCircle className="h-5 w-5 text-emerald-400" />
                     ) : (
@@ -305,7 +449,7 @@ export default function StudentLog() {
                   </div>
 
                   {/* Source Badge */}
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <div
                       className="flex items-center gap-2 px-3.5 py-2 rounded-lg"
                       style={{ backgroundColor: "rgb(var(--bg-tertiary))" }}

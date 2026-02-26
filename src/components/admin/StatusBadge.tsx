@@ -12,7 +12,7 @@ export default function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold ring-1 font-inter",
+        "inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-bold ring-1 font-inter min-w-[180px] text-center relative",
         cfg.bg,
         cfg.color,
         cfg.ring,
@@ -21,11 +21,11 @@ export default function StatusBadge({ status, className }: StatusBadgeProps) {
     >
       <span
         className={cn(
-          "h-2 w-2 rounded-full flex-shrink-0",
+          "h-2 w-2 rounded-full shrink-0 absolute left-3",
           cfg.color.replace("text-", "bg-"),
         )}
       />
-      {cfg.label}
+      <span className="w-full">{cfg.label}</span>
     </span>
   );
 }

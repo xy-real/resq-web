@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { MoreHorizontal, ChevronUp, ChevronDown, Search } from "lucide-react";
+import { useState, useMemo } from "react";
+import { MoreHorizontal, ChevronUp, ChevronDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Student, StudentStatus } from "@/types";
 import { STATUS_CONFIG, formatTimestamp } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
@@ -40,6 +40,8 @@ export default function StudentTable({
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -47,23 +49,42 @@ export default function StudentTable({
       setSortKey(key);
       setSortDir("asc");
     }
+    setCurrentPage(1);
   };
 
-  const filtered = students
-    .filter((s) => {
-      const q = search.toLowerCase();
-      return (
-        s.name.toLowerCase().includes(q) ||
-        s.student_id.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      const av = a[sortKey] ?? "";
-      const bv = b[sortKey] ?? "";
-      return sortDir === "asc"
-        ? String(av).localeCompare(String(bv))
-        : String(bv).localeCompare(String(av));
-    });
+  const filtered = useMemo(
+    () =>
+      students
+        .filter((s) => {
+          const q = search.toLowerCase();
+          return (
+            s.name.toLowerCase().includes(q) ||
+            s.student_id.toLowerCase().includes(q)
+          );
+        })
+        .sort((a, b) => {
+          const av = a[sortKey] ?? "";
+          const bv = b[sortKey] ?? "";
+          return sortDir === "asc"
+            ? String(av).localeCompare(String(bv))
+            : String(bv).localeCompare(String(av));
+        }),
+    [students, search, sortKey, sortDir]
+  );
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filtered.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
   const SortIcon = ({ col }: { col: SortKey }) =>
     sortKey === col ? (
@@ -83,7 +104,7 @@ export default function StudentTable({
           type="text"
           placeholder="Search name or ID…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="w-full rounded-lg pl-9 pr-4 py-2.5 text-base text-theme-text-primary placeholder:text-theme-text-tertiary ring-1 focus:outline-none focus:ring-sky-500/50 transition font-krub"
           style={{
             backgroundColor: "rgb(var(--bg-secondary))",
@@ -158,7 +179,7 @@ export default function StudentTable({
                 </td>
               </tr>
             ) : (
-              filtered.map((student) => {
+              paginatedData.map((student) => {
                 const cfg = STATUS_CONFIG[student.current_status ?? "UNKNOWN"];
                 return (
                   <tr
@@ -262,9 +283,89 @@ export default function StudentTable({
         </table>
       </div>
 
-      {!isLoading && (
+      {/* Pagination */}
+      {!isLoading && filtered.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-theme-text-tertiary">
+            Showing {startIndex + 1}-{Math.min(endIndex, filtered.length)} of {filtered.length} students
+          </p>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg p-2 text-theme-text-secondary hover:text-theme-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition"
+                style={{
+                  backgroundColor: "rgb(var(--bg-secondary))",
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first, last, current, and adjacent pages
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handlePageChange(page)}
+                        className={cn(
+                          "min-w-[32px] h-8 px-2 rounded-lg text-sm font-semibold transition",
+                          page === currentPage
+                            ? "text-white"
+                            : "text-theme-text-secondary hover:text-theme-text-primary"
+                        )}
+                        style={{
+                          backgroundColor:
+                            page === currentPage
+                              ? "rgb(var(--color-sky-500))"
+                              : "rgb(var(--bg-secondary))",
+                        }}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <span
+                        key={page}
+                        className="px-1 text-theme-text-tertiary text-sm"
+                      >
+                        …
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg p-2 text-theme-text-secondary hover:text-theme-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition"
+                style={{
+                  backgroundColor: "rgb(var(--bg-secondary))",
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isLoading && filtered.length === 0 && (
         <p className="text-xs text-theme-text-tertiary">
-          Showing {filtered.length} of {students.length} students
+          No students found
         </p>
       )}
     </div>
