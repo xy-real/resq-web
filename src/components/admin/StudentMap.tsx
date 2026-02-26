@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 import { Users, Building2, Layers } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Student, EvacuationCenter } from "@/types";
@@ -17,7 +18,7 @@ interface Props {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const VSU_CENTER: [number, number] = [10.7202, 124.7458];
+const VSU_CENTER: [number, number] = [10.746104347993336, 124.7945340158154];
 const DEFAULT_ZOOM = 14;
 
 const STATUS_COLORS: Record<string, string> = {
@@ -78,6 +79,7 @@ export default function StudentMap({
   evacuationCenters,
   isVisible,
 }: Props) {
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -85,6 +87,7 @@ export default function StudentMap({
   const [mapReady, setMapReady] = useState(false);
 
   const locatedStudents = students.filter((s) => s.latitude && s.longitude);
+  const isDark = theme === "dark";
 
   // ── 1. Initialize Leaflet once the container is in the DOM ─────────────────
   useEffect(() => {
@@ -110,22 +113,7 @@ export default function StudentMap({
         attributionControl: false,
       });
 
-      // Dark CARTO tile layer
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        { maxZoom: 19 },
-      ).addTo(map);
-
-      // VSU campus radius ring
-      L.circle(VSU_CENTER, {
-        radius: 600,
-        color: "#38bdf8",
-        fillColor: "#38bdf8",
-        fillOpacity: 0.04,
-        weight: 1.5,
-        dashArray: "6 4",
-      }).addTo(map);
-
+      // Tile layer - will be updated by theme effect
       mapRef.current = map;
       setMapReady(true);
     });
@@ -138,6 +126,39 @@ export default function StudentMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── 1b. Update tile layer when theme changes ─────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
+
+    import("leaflet").then((L) => {
+      const map = mapRef.current;
+
+      // Remove existing tile layer
+      map.eachLayer((layer: import("leaflet").Layer) => {
+        if (layer instanceof L.TileLayer) {
+          map.removeLayer(layer);
+        }
+      });
+
+      // Add theme-appropriate tile layer
+      const tileUrl = isDark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+      L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
+
+      // VSU campus radius ring
+      L.circle(VSU_CENTER, {
+        radius: 600,
+        color: "#38bdf8",
+        fillColor: "#38bdf8",
+        fillOpacity: isDark ? 0.04 : 0.08,
+        weight: 1.5,
+        dashArray: "6 4",
+      }).addTo(map);
+    });
+  }, [mapReady, isDark]);
 
   // ── 2. invalidateSize whenever the tab becomes visible ────────────────────
   //    This is THE critical fix — Leaflet needs to recalculate container size
@@ -168,6 +189,11 @@ export default function StudentMap({
 
       // Student markers
       if (filter !== "centers") {
+        const popupBg = isDark ? "#1e293b" : "#ffffff";
+        const popupText = isDark ? "#f1f5f9" : "#0f172a";
+        const popupBorder = isDark ? "#334155" : "#e2e8f0";
+        const popupSecondary = isDark ? "#94a3b8" : "#64748b";
+
         locatedStudents.forEach((student) => {
           const icon = makeStudentIcon(L, student.current_status ?? "UNKNOWN");
           const marker = L.marker([student.latitude!, student.longitude!], {
@@ -175,13 +201,13 @@ export default function StudentMap({
           });
           marker.bindPopup(
             `
-            <div style="background:#1e293b;color:#f1f5f9;padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid #334155;font-family:system-ui,sans-serif">
+            <div style="background:${popupBg};color:${popupText};padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid ${popupBorder};font-family:system-ui,sans-serif">
               <div style="font-weight:700;font-size:14px;margin-bottom:4px">${student.name ?? "Unknown"}</div>
-              <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">${student.student_id ?? ""}</div>
+              <div style="font-size:11px;color:${popupSecondary};margin-bottom:6px">${student.student_id ?? ""}</div>
               <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}22;color:${STATUS_COLORS[student.current_status ?? "UNKNOWN"]}">
                 ${(student.current_status ?? "UNKNOWN").replace("_", " ")}
               </div>
-              ${student.last_update_timestamp ? `<div style="font-size:10px;color:#64748b;margin-top:6px">${new Date(student.last_update_timestamp).toLocaleString()}</div>` : ""}
+              ${student.last_update_timestamp ? `<div style="font-size:10px;color:${popupSecondary};margin-top:6px">${new Date(student.last_update_timestamp).toLocaleString()}</div>` : ""}
             </div>
           `,
             { className: "leaflet-popup-dark" },
@@ -192,6 +218,11 @@ export default function StudentMap({
 
       // Evacuation center markers
       if (filter !== "students") {
+        const popupBg = isDark ? "#1e293b" : "#ffffff";
+        const popupText = isDark ? "#f1f5f9" : "#0f172a";
+        const popupBorder = isDark ? "#334155" : "#e2e8f0";
+        const popupSecondary = isDark ? "#94a3b8" : "#64748b";
+
         evacuationCenters.forEach((center) => {
           if (!center.latitude || !center.longitude) return;
           const icon = makeCenterIcon(L);
@@ -200,9 +231,9 @@ export default function StudentMap({
           });
           marker.bindPopup(
             `
-            <div style="background:#1e293b;color:#f1f5f9;padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid #334155;font-family:system-ui,sans-serif">
+            <div style="background:${popupBg};color:${popupText};padding:10px 12px;border-radius:8px;min-width:160px;border:1px solid ${popupBorder};font-family:system-ui,sans-serif">
               <div style="font-weight:700;font-size:14px;margin-bottom:4px">${center.name ?? "Evacuation Center"}</div>
-              <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">${center.address ?? ""}</div>
+              <div style="font-size:11px;color:${popupSecondary};margin-bottom:6px">${center.address ?? ""}</div>
               <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#a855f722;color:#a855f7">
                 Capacity: ${center.capacity ?? "N/A"}
               </div>
@@ -214,7 +245,7 @@ export default function StudentMap({
         });
       }
     });
-  }, [mapReady, filter, locatedStudents, evacuationCenters]);
+  }, [mapReady, filter, locatedStudents, evacuationCenters, isDark]);
 
   // ── Custom zoom handlers ───────────────────────────────────────────────────
   const zoomIn = () => mapRef.current?.zoomIn();
@@ -238,11 +269,16 @@ export default function StudentMap({
               key={key}
               onClick={() => setFilter(key)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
                 filter === key
-                  ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
-                  : "text-zinc-400 border border-white/5 hover:border-white/10 hover:text-zinc-300",
+                  ? "bg-cyan-500/20 text-cyan-500 border-cyan-500/40"
+                  : "text-theme-text-secondary hover:text-theme-text-primary",
               )}
+              style={
+                filter !== key
+                  ? { borderColor: "rgb(var(--border-primary))" }
+                  : undefined
+              }
             >
               <Icon size={13} />
               {label}
@@ -250,15 +286,15 @@ export default function StudentMap({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <div className="flex items-center gap-3 text-xs text-theme-text-secondary">
           <span>
-            <span className="text-zinc-300 font-medium">
+            <span className="text-theme-text-primary font-medium">
               {locatedStudents.length}
             </span>
             /{students.length} students located
           </span>
           <span>
-            <span className="text-zinc-300 font-medium">
+            <span className="text-theme-text-primary font-medium">
               {evacuationCenters.length}
             </span>{" "}
             centers
@@ -268,13 +304,16 @@ export default function StudentMap({
 
       {/* Map wrapper — explicit height is mandatory for Leaflet */}
       <div
-        className="relative rounded-xl overflow-hidden border border-white/5"
-        style={{ height: "520px" }}
+        className="relative rounded-xl overflow-hidden border"
+        style={{
+          height: "520px",
+          borderColor: "rgb(var(--border-primary))",
+        }}
       >
         {/* Leaflet CSS — injected inline to avoid a separate global import */}
         <style>{`
           @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-          .leaflet-container { background: #0f172a; }
+          .leaflet-container { background: ${isDark ? "#0f172a" : "#f8fafc"}; }
           .leaflet-popup-content-wrapper,
           .leaflet-popup-tip { background: transparent !important; box-shadow: none !important; }
           .leaflet-popup-content { margin: 0 !important; }
@@ -293,7 +332,14 @@ export default function StudentMap({
             <button
               key={label}
               onClick={action}
-              className="w-8 h-8 rounded-lg bg-zinc-900/90 border border-white/10 text-zinc-300 hover:text-white hover:border-white/20 text-sm font-bold backdrop-blur-sm transition-all flex items-center justify-center"
+              className="w-8 h-8 rounded-lg backdrop-blur-sm transition-all flex items-center justify-center border text-sm font-bold"
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(24, 24, 27, 0.9)"
+                  : "rgba(255, 255, 255, 0.9)",
+                borderColor: "rgb(var(--border-primary))",
+                color: "rgb(var(--text-primary))",
+              }}
             >
               {label}
             </button>
@@ -301,8 +347,16 @@ export default function StudentMap({
         </div>
 
         {/* Legend */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-zinc-900/90 backdrop-blur-sm border border-white/10 rounded-xl p-3">
-          <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+        <div
+          className="absolute bottom-3 left-3 z-[1000] backdrop-blur-sm border rounded-xl p-3"
+          style={{
+            backgroundColor: isDark
+              ? "rgba(24, 24, 27, 0.9)"
+              : "rgba(255, 255, 255, 0.9)",
+            borderColor: "rgb(var(--border-primary))",
+          }}
+        >
+          <p className="text-[10px] font-semibold text-theme-text-tertiary uppercase tracking-widest mb-2">
             Legend
           </p>
           {LEGEND_ITEMS.map(({ label, color }) => (
@@ -314,7 +368,7 @@ export default function StudentMap({
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-xs text-zinc-400">{label}</span>
+              <span className="text-xs text-theme-text-secondary">{label}</span>
             </div>
           ))}
         </div>
@@ -322,12 +376,23 @@ export default function StudentMap({
         {/* Empty state overlay */}
         {mapReady && locatedStudents.length === 0 && filter !== "centers" && (
           <div className="absolute inset-0 flex items-center justify-center z-[999] pointer-events-none">
-            <div className="bg-zinc-900/80 backdrop-blur-sm border border-white/10 rounded-xl px-6 py-4 text-center">
-              <Users size={28} className="text-zinc-600 mx-auto mb-2" />
-              <p className="text-sm text-zinc-400">
+            <div
+              className="backdrop-blur-sm border rounded-xl px-6 py-4 text-center"
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(24, 24, 27, 0.8)"
+                  : "rgba(255, 255, 255, 0.8)",
+                borderColor: "rgb(var(--border-primary))",
+              }}
+            >
+              <Users
+                size={28}
+                className="text-theme-text-tertiary mx-auto mb-2"
+              />
+              <p className="text-sm text-theme-text-secondary">
                 No students with GPS coordinates yet
               </p>
-              <p className="text-xs text-zinc-600 mt-1">
+              <p className="text-xs text-theme-text-tertiary mt-1">
                 Evacuation centers are shown in purple
               </p>
             </div>

@@ -30,12 +30,14 @@ export default function StatsCard({
       onClick={onClick}
       className={cn(
         "group relative w-full text-left rounded-xl p-5 ring-1 transition-all duration-200",
-        "bg-[#0f1623] hover:bg-[#161e2e]",
-        ringClass,
+        "hover:bg-theme-interactive-hover",
         isActive && "ring-2 ring-offset-0",
-        isActive ? ringClass.replace("ring-", "ring-") : "",
         onClick ? "cursor-pointer" : "cursor-default",
       )}
+      style={{
+        backgroundColor: "rgb(var(--bg-secondary))",
+        borderColor: "rgb(var(--border-primary))",
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className={cn("rounded-lg p-2.5", bgClass)}>
@@ -61,7 +63,9 @@ export default function StatsCard({
       >
         {value.toLocaleString()}
       </p>
-      <p className="mt-1 text-sm text-slate-400 font-medium">{label}</p>
+      <p className="mt-1 text-sm font-medium text-theme-text-secondary">
+        {label}
+      </p>
     </button>
   );
 }

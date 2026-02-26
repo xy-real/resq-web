@@ -2,6 +2,7 @@
 
 import { RefreshCw, Shield } from "lucide-react";
 import { cn } from "@/lib/cn";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -34,10 +35,10 @@ export default function DashboardHeader({
           />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-100 tracking-tight">
+          <h1 className="text-xl font-bold text-theme-text-primary tracking-tight">
             VSU Typhoon Response Dashboard
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-theme-text-secondary">
             Monitor and manage student safety status
           </p>
         </div>
@@ -48,15 +49,20 @@ export default function DashboardHeader({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={isRefreshing}
-        className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-slate-300 ring-1 ring-white/5 transition"
-      >
-        <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-        Refresh
-      </button>
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="inline-flex items-center gap-2 self-start sm:self-auto rounded-lg bg-theme-bg-tertiary hover:bg-theme-interactive-hover disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-theme-text-secondary ring-1 ring-theme-border-primary transition"
+        >
+          <RefreshCw
+            className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+          />
+          Refresh
+        </button>
+      </div>
     </header>
   );
 }
