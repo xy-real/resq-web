@@ -50,17 +50,39 @@ export function useDisasterMode() {
   const query = useQuery({
     queryKey: queryKeys.disasterMode,
     queryFn: fetchDisasterMode,
+    staleTime: 60_000, // Consider data fresh for 60 seconds
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
 
   const mutation = useMutation({
     mutationFn: setDisasterMode,
+    onMutate: async (isActive) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: queryKeys.disasterMode });
+      
+      // Snapshot the previous value
+      const previousValue = queryClient.getQueryData(queryKeys.disasterMode);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(queryKeys.disasterMode, isActive);
+      
+      // Return context with previous value for rollback
+      return { previousValue };
+    },
     onSuccess: (_data, isActive) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.disasterMode });
+      // Keep the optimistic update, don't refetch
       toast.success(
         isActive ? '🚨 Disaster mode activated' : '✅ Disaster mode deactivated',
       );
     },
-    onError: () => toast.error('Failed to update disaster mode'),
+    onError: (_error, _variables, context) => {
+      // Rollback to previous value on error
+      if (context?.previousValue !== undefined) {
+        queryClient.setQueryData(queryKeys.disasterMode, context.previousValue);
+      }
+      toast.error('Failed to update disaster mode');
+    },
   });
 
   return { ...query, toggle: mutation.mutate, isToggling: mutation.isPending };
