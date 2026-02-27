@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { Shield } from "lucide-react";
 import SignUpForm from "@/components/SignUpForm";
 
 export default function SignUpPage() {
@@ -18,13 +18,7 @@ export default function SignUpPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="rounded-xl p-3 ring-1 bg-sky-500/10 ring-sky-500/20">
-              <Image
-                src="/Logo.svg"
-                alt="ResQ Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
-              />
+              <Shield className="h-8 w-8 text-sky-400" strokeWidth={1.8} />
             </div>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl font-bold text-theme-text-primary tracking-tight leading-tight mb-3">
