@@ -1,8 +1,7 @@
 "use client";
 
-import { RefreshCw, LogOut, MapPin } from "lucide-react";
+import { RefreshCw, Shield, LogOut, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { cn } from "@/lib/cn";
 import ThemeToggle from "@/components/ThemeToggle";
 import { signOut } from "@/lib/auth";
@@ -54,12 +53,12 @@ export default function DashboardHeader({
               : "bg-sky-500/10 ring-sky-500/20",
           )}
         >
-          <Image
-            src="/Logo.svg"
-            alt="ResQ Logo"
-            width={24}
-            height={24}
-            className="h-6 w-6"
+          <Shield
+            className={cn(
+              "h-6 w-6 transition-colors",
+              isDisasterMode ? "text-red-400" : "text-sky-400",
+            )}
+            strokeWidth={1.8}
           />
         </div>
         <div>
