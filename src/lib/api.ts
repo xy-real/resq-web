@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API client abstraction layer.
  * Replace `base44` calls here with your actual Next.js API routes
  * (e.g. fetch('/api/students')) or a real SDK import.
@@ -15,7 +15,7 @@ import type {
   StudentStatus,
 } from '@/types';
 
-//  Students 
+// ─── Students ────────────────────────────────────────────────────────────────
 
 export async function fetchStudents(): Promise<Student[]> {
   const res = await fetch('/api/students?sort=-updated_date');
@@ -39,7 +39,7 @@ export async function updateStudentStatus(
   return res.json();
 }
 
-//  Evacuation Centers 
+// ─── Evacuation Centers ───────────────────────────────────────────────────────
 
 export async function fetchActiveEvacuationCenters(): Promise<EvacuationCenter[]> {
   const res = await fetch('/api/evacuation-centers?is_active=true');
@@ -47,7 +47,7 @@ export async function fetchActiveEvacuationCenters(): Promise<EvacuationCenter[]
   return res.json();
 }
 
-//  System Settings 
+// ─── System Settings ──────────────────────────────────────────────────────────
 
 export async function fetchDisasterMode(): Promise<boolean> {
   const res = await fetch('/api/settings/disaster_mode');
@@ -65,7 +65,7 @@ export async function setDisasterMode(isActive: boolean): Promise<void> {
   if (!res.ok) throw new Error('Failed to update disaster mode');
 }
 
-//  Status Logs 
+// ─── Status Logs ─────────────────────────────────────────────────────────────
 
 export async function createStatusLog(
   payload: Omit<StatusLog, 'id' | 'created_at'>,
