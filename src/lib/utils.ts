@@ -1,4 +1,4 @@
-﻿import type { Student, DashboardStats, StudentStatus } from '@/types';
+import type { Student, DashboardStats, StudentStatus } from '@/types';;
 
 export function computeStats(students: Student[]): DashboardStats {
   const count = (status: StudentStatus) =>
@@ -59,14 +59,14 @@ export const STATUS_CONFIG: Record<
   },
   UNKNOWN: {
     label: 'Unknown',
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10',
-    ring: 'ring-purple-500/30',
+    color: 'text-slate-400',
+    bg: 'bg-slate-500/10',
+    ring: 'ring-slate-500/30',
   },
 };
 
 export function formatTimestamp(ts: string | null | undefined): string {
-  if (!ts) return '';
+  if (!ts) return '—';
   return new Intl.DateTimeFormat('en-PH', {
     dateStyle: 'medium',
     timeStyle: 'short',
